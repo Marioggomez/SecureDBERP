@@ -2,36 +2,31 @@ namespace SecureERP.Application.Modules.Security.DTOs;
 
 public sealed record LoginResponse(
     bool IsAuthenticated,
-    string? AccessToken,
-    Guid? SessionId,
-    DateTimeOffset? ExpiresAtUtc,
+    Guid? AuthFlowId,
     long? UserId,
     long? TenantId,
-    long? CompanyId,
+    IReadOnlyList<OperableCompanyDto> OperableCompanies,
     bool RequiresPasswordChange,
     bool RequiresMfa,
     string? ErrorCode,
     string? ErrorMessage)
 {
     public static LoginResponse Success(
-        string accessToken,
-        Guid sessionId,
-        DateTimeOffset expiresAtUtc,
+        Guid authFlowId,
         long userId,
         long tenantId,
-        long companyId,
-        bool requiresPasswordChange)
+        IReadOnlyList<OperableCompanyDto> operableCompanies,
+        bool requiresPasswordChange,
+        bool requiresMfa)
     {
         return new LoginResponse(
             true,
-            accessToken,
-            sessionId,
-            expiresAtUtc,
+            authFlowId,
             userId,
             tenantId,
-            companyId,
+            operableCompanies,
             requiresPasswordChange,
-            false,
+            requiresMfa,
             null,
             null);
     }
@@ -43,9 +38,7 @@ public sealed record LoginResponse(
             null,
             null,
             null,
-            null,
-            null,
-            null,
+            Array.Empty<OperableCompanyDto>(),
             false,
             requiresMfa,
             errorCode,

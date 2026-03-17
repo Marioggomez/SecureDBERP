@@ -25,7 +25,10 @@ public static class DependencyInjection
         services.AddScoped<IStoredProcedureCommandExecutor, StoredProcedureCommandExecutor>();
         services.AddScoped<IStoredProcedureQueryExecutor, StoredProcedureQueryExecutor>();
         services.AddScoped<IAuthRepository, AuthRepository>();
+        services.AddScoped<IAuthorizationRepository, AuthorizationRepository>();
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
+        services.AddSingleton<ITokenGenerator, TokenGenerator>();
+        services.AddSingleton<IMfaCodeService, MfaCodeService>();
 
         services.AddScoped<IAuditTrailWriter, NoOpAuditTrailWriter>();
         services.AddSingleton<IClock, SystemClock>();

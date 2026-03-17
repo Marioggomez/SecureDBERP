@@ -2,8 +2,6 @@ using SecureERP.Application.Abstractions.Context;
 using SecureERP.Application.Modules.Security.Abstractions;
 using SecureERP.Application.Modules.Security.DTOs;
 using SecureERP.Domain.Modules.Security;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace SecureERP.Application.Modules.Security.Commands;
 
@@ -39,17 +37,28 @@ public sealed class LoginHandler : ILoginHandler
 
         if (user is null)
         {
+            await _authRepository.WriteSecurityEventAsync(
+                new SecurityEventToCreate(
+                    "AUTH_LOGIN_FAILED",
+                    "WARNING",
+                    "DENIED",
+                    "Invalid credentials.",
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    ParseCorrelationId(_requestContextAccessor.Current.CorrelationId),
+                    request.IpAddress,
+                    request.UserAgent),
+                cancellationToken);
+
             return LoginResponse.Failure("LOGIN_INVALID_CREDENTIALS", "Invalid credentials.");
         }
 
         if (!user.IsActiveUser || !user.IsCredentialActive)
         {
             return LoginResponse.Failure("LOGIN_USER_INACTIVE", "User is inactive.");
-        }
-
-        if (user.CompanyId <= 0)
-        {
-            return LoginResponse.Failure("LOGIN_NO_COMPANY_SCOPE", "User has no operable company scope.");
         }
 
         bool passwordMatches = _passwordHasher.VerifyPassword(
@@ -61,51 +70,89 @@ public sealed class LoginHandler : ILoginHandler
 
         if (!passwordMatches)
         {
+            await _authRepository.WriteSecurityEventAsync(
+                new SecurityEventToCreate(
+                    "AUTH_LOGIN_FAILED",
+                    "WARNING",
+                    "DENIED",
+                    "Invalid credentials.",
+                    user.TenantId,
+                    null,
+                    user.UserId,
+                    null,
+                    null,
+                    ParseCorrelationId(_requestContextAccessor.Current.CorrelationId),
+                    request.IpAddress,
+                    request.UserAgent),
+                cancellationToken);
+
             return LoginResponse.Failure("LOGIN_INVALID_CREDENTIALS", "Invalid credentials.");
         }
 
-        if (user.MfaEnabled)
+        IReadOnlyList<OperableCompany> companies = await _authRepository.GetOperableCompaniesAsync(
+            user.UserId,
+            user.TenantId,
+            cancellationToken);
+
+        if (companies.Count == 0)
         {
-            return LoginResponse.Failure("LOGIN_MFA_REQUIRED", "MFA is required for this account.", true);
+            return LoginResponse.Failure("LOGIN_NO_COMPANY_SCOPE", "User has no operable company scope.");
         }
 
-        Guid sessionId = Guid.NewGuid();
-        string accessToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
-        byte[] tokenHash = SHA256.HashData(Encoding.UTF8.GetBytes(accessToken));
-        DateTimeOffset now = DateTimeOffset.UtcNow;
-        DateTimeOffset expiresAt = now.AddHours(8);
-
+        Guid authFlowId = Guid.NewGuid();
+        DateTime now = DateTime.UtcNow;
         RequestContext currentContext = _requestContextAccessor.Current;
         _requestContextAccessor.SetCurrent(new RequestContext(
             user.TenantId,
-            user.CompanyId,
+            null,
             user.UserId,
-            sessionId,
+            null,
             currentContext.CorrelationId));
 
-        UserSessionToCreate session = new(
-            sessionId,
-            user.UserId,
-            user.TenantId,
-            user.CompanyId,
-            tokenHash,
-            "LOGIN",
-            false,
-            now.UtcDateTime,
-            expiresAt.UtcDateTime,
-            now.UtcDateTime,
-            request.IpAddress,
-            request.UserAgent);
+        await _authRepository.CreateAuthFlowAsync(
+            new AuthFlowToCreate(
+                authFlowId,
+                user.UserId,
+                user.TenantId,
+                user.MfaEnabled,
+                false,
+                now.AddMinutes(10),
+                request.IpAddress,
+                request.UserAgent,
+                currentContext.CorrelationId),
+            cancellationToken);
 
-        await _authRepository.CreateSessionAsync(session, cancellationToken);
+        await _authRepository.WriteSecurityEventAsync(
+            new SecurityEventToCreate(
+                "AUTH_LOGIN_SUCCESS",
+                "INFO",
+                "OK",
+                "Login validated. Pending company selection.",
+                user.TenantId,
+                null,
+                user.UserId,
+                null,
+                authFlowId,
+                ParseCorrelationId(currentContext.CorrelationId),
+                request.IpAddress,
+                request.UserAgent),
+            cancellationToken);
+
+        IReadOnlyList<OperableCompanyDto> companyDtos = companies
+            .Select(c => new OperableCompanyDto(c.CompanyId, c.CompanyCode, c.CompanyName, c.IsDefault))
+            .ToList();
 
         return LoginResponse.Success(
-            accessToken,
-            sessionId,
-            expiresAt,
+            authFlowId,
             user.UserId,
             user.TenantId,
-            user.CompanyId,
-            user.RequiresPasswordChange);
+            companyDtos,
+            user.RequiresPasswordChange,
+            user.MfaEnabled);
+    }
+
+    private static Guid? ParseCorrelationId(string? correlationId)
+    {
+        return Guid.TryParse(correlationId, out Guid value) ? value : null;
     }
 }

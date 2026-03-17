@@ -19,10 +19,10 @@ public sealed class SqlSessionContextApplier : ISqlSessionContextApplier
         RequestContext context = _requestContextAccessor.Current;
 
         await SetValueIfPresentAsync(connection, "correlation_id", context.CorrelationId, cancellationToken);
-        await SetValueIfPresentAsync(connection, "tenant_id", context.TenantId, cancellationToken);
-        await SetValueIfPresentAsync(connection, "company_id", context.CompanyId, cancellationToken);
-        await SetValueIfPresentAsync(connection, "user_id", context.UserId, cancellationToken);
-        await SetValueIfPresentAsync(connection, "session_id", context.SessionId, cancellationToken);
+        await SetValueIfPresentAsync(connection, "id_tenant", context.TenantId, cancellationToken);
+        await SetValueIfPresentAsync(connection, "id_empresa", context.CompanyId, cancellationToken);
+        await SetValueIfPresentAsync(connection, "id_usuario", context.UserId, cancellationToken);
+        await SetValueIfPresentAsync(connection, "id_sesion", context.SessionId, cancellationToken);
     }
 
     private static async Task SetValueIfPresentAsync(

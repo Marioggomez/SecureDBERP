@@ -2,12 +2,10 @@ namespace SecureERP.Api.Modules.Security;
 
 public sealed record LoginResponseContract(
     bool IsAuthenticated,
-    string? AccessToken,
-    Guid? SessionId,
-    DateTimeOffset? ExpiresAtUtc,
+    Guid? AuthFlowId,
     long? UserId,
     long? TenantId,
-    long? CompanyId,
+    IReadOnlyList<OperableCompanyContract> OperableCompanies,
     bool RequiresPasswordChange,
     bool RequiresMfa,
     string? ErrorCode,

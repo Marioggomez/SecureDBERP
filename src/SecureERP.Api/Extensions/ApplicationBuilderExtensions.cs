@@ -14,6 +14,7 @@ public static class ApplicationBuilderExtensions
 
         app.UseMiddleware<CorrelationIdMiddleware>();
         app.UseMiddleware<ExceptionHandlingMiddleware>();
+        app.UseMiddleware<SecurityContextMiddleware>();
         app.UseHttpsRedirection();
 
         return app;

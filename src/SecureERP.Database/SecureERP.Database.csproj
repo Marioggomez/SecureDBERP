@@ -17,6 +17,7 @@
     <None Include="Security\\.gitkeep" />
     <None Include="Seeds\\.gitkeep" />
     <None Include="Scripts\\.gitkeep" />
+    <None Include="Scripts\\IAM\\*.sql" />
   </ItemGroup>
 
 </Project>

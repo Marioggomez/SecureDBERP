@@ -23,10 +23,12 @@ public sealed class PasswordHasher : IPasswordHasher
         int effectiveIterations = iterations > 0 ? iterations : 100_000;
         byte[] computedHash = algorithm.Trim().ToUpperInvariant() switch
         {
+            "PBKDF2_SHA512" => Pbkdf2(plainTextPassword, salt, effectiveIterations, HashAlgorithmName.SHA512, expectedHash.Length),
+            "PBKDF2-SHA512" => Pbkdf2(plainTextPassword, salt, effectiveIterations, HashAlgorithmName.SHA512, expectedHash.Length),
+            "PBKDF2_HMAC_SHA512" => Pbkdf2(plainTextPassword, salt, effectiveIterations, HashAlgorithmName.SHA512, expectedHash.Length),
             "PBKDF2_SHA256" => Pbkdf2(plainTextPassword, salt, effectiveIterations, HashAlgorithmName.SHA256, expectedHash.Length),
             "PBKDF2-SHA256" => Pbkdf2(plainTextPassword, salt, effectiveIterations, HashAlgorithmName.SHA256, expectedHash.Length),
             "PBKDF2" => Pbkdf2(plainTextPassword, salt, effectiveIterations, HashAlgorithmName.SHA256, expectedHash.Length),
-            "PBKDF2_SHA512" => Pbkdf2(plainTextPassword, salt, effectiveIterations, HashAlgorithmName.SHA512, expectedHash.Length),
             _ => Array.Empty<byte>()
         };
 

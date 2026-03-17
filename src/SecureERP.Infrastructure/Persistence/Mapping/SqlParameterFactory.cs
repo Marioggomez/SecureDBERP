@@ -11,6 +11,9 @@ public static class SqlParameterFactory
     public static SqlParameter Int(string name, int? value)
         => Create(name, SqlDbType.Int, value ?? (object)DBNull.Value);
 
+    public static SqlParameter SmallInt(string name, short? value)
+        => Create(name, SqlDbType.SmallInt, value ?? (object)DBNull.Value);
+
     public static SqlParameter BigInt(string name, long? value)
         => Create(name, SqlDbType.BigInt, value ?? (object)DBNull.Value);
 
