@@ -1,38 +1,34 @@
-﻿# SecureDBERP
+﻿# SecureERP
 
-Repositorio oficial de la solución de base de datos para SecureERP.
+Solution base enterprise para SecureERP sobre .NET 8 + SQL Server (ADO.NET + Stored Procedures).
 
-## Estado actual
+## Proyectos
 
-- Fase 1 a Fase 5 completadas y certificadas.
-- Endurecimiento SQL aplicado sobre todos los Stored Procedures.
-- Clasificación final: 547 SP reutilizables.
+- `src/SecureERP.Api`
+- `src/SecureERP.Application`
+- `src/SecureERP.Domain`
+- `src/SecureERP.Infrastructure`
+- `src/SecureERP.Database`
+- `tests/SecureERP.Tests`
 
-## Estructura
+## Principios
 
-- `docs/`: baseline, decisiones y actas de certificación.
-- `sql/00_prerequisites/`: prerrequisitos de ambiente.
-- `sql/01_schemas/`: creación y mantenimiento de esquemas.
-- `sql/02_tables/`: definición de tablas.
-- `sql/03_functions/`: funciones escalares/tabla.
-- `sql/04_views/`: vistas de negocio y soporte.
-- `sql/05_procedures/`: procedimientos almacenados.
-- `sql/06_security_rls/`: seguridad, permisos, RLS.
-- `sql/07_auditoria_observabilidad/`: auditoría y trazabilidad.
-- `sql/08_workflow/`: objetos de workflow/aprobación.
-- `sql/09_seed/`: datos semilla controlados.
-- `sql/99_release/`: paquetes de despliegue por versión.
-- `ops/`: runbooks y checklists de operación.
+- Modular monolith gobernado por features (no microservicios)
+- Base de datos como fuente de verdad en seguridad
+- Reutilización de Stored Procedures existentes
+- Sin Entity Framework
+- Sin SQL dinámico inseguro
+- Sin `AddWithValue`
 
-## Convenciones iniciales
+## Referencias entre proyectos
 
-1. No modificar contratos funcionales sin declarar impacto.
-2. Todo cambio SQL debe mantener XACT_ABORT + TRY/CATCH.
-3. Escritura multiempresa requiere SESSION_CONTEXT y validación de tenant/empresa.
-4. Cambios de seguridad/auditoría deben incluir evidencia de pruebas.
+- Api -> Application, Infrastructure
+- Application -> Domain
+- Infrastructure -> Application, Domain
+- Domain -> (sin referencias a otros proyectos)
+- Database -> sin referencias desde C#
 
-## Actas de referencia
+## Estado
 
-- `docs/FASE_3_3_CIERRE_OPERATIVO.md`
-- `docs/FASE_4_REFACTOR_EXCEPCIONES.md`
-- `docs/FASE_5_CERTIFICACION_FINAL.md`
+Estructura inicial creada y lista para iteración incremental por fases.
+

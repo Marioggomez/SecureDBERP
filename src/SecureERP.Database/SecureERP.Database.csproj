@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <EnableDefaultItems>false</EnableDefaultItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" />
+    <None Include="Schemas\\.gitkeep" />
+    <None Include="Tables\\.gitkeep" />
+    <None Include="Views\\.gitkeep" />
+    <None Include="Functions\\.gitkeep" />
+    <None Include="StoredProcedures\\.gitkeep" />
+    <None Include="Security\\.gitkeep" />
+    <None Include="Seeds\\.gitkeep" />
+    <None Include="Scripts\\.gitkeep" />
+  </ItemGroup>
+
+</Project>
