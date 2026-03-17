@@ -71,7 +71,14 @@ public sealed class SecurityContextMiddleware
         if (permissionRequirement is not null)
         {
             AuthorizationCheckResult decision = await authorizationEvaluator.EvaluateAsync(
-                new AuthorizationCheckRequest(permissionRequirement.PermissionCode, permissionRequirement.RequiresMfa),
+                new AuthorizationCheckRequest(
+                    permissionRequirement.PermissionCode,
+                    permissionRequirement.RequiresMfa,
+                    path,
+                    context.Request.Method,
+                    context.Connection.RemoteIpAddress?.ToString(),
+                    context.Request.Headers.UserAgent.ToString(),
+                    context.TraceIdentifier),
                 context.RequestAborted);
 
             if (!decision.IsAllowed)

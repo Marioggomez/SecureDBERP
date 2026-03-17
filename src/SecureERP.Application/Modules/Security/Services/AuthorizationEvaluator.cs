@@ -38,6 +38,25 @@ public sealed class AuthorizationEvaluator : IAuthorizationEvaluator
                 request.RequiresMfa),
             cancellationToken);
 
+        await _authorizationRepository.WriteAuthorizationAuditAsync(
+            new AuthorizationAuditEntry(
+                DateTime.UtcNow,
+                context.TenantId.Value,
+                context.UserId.Value,
+                context.CompanyId.Value,
+                context.SessionId.Value,
+                request.PermissionCode,
+                request.OperationCode,
+                request.HttpMethod,
+                decision.IsAllowed,
+                decision.ReasonCode,
+                null,
+                null,
+                request.IpAddress,
+                request.UserAgent,
+                request.RequestId),
+            cancellationToken);
+
         return new AuthorizationCheckResult(decision.IsAllowed, decision.ReasonCode, decision.ResolutionSource);
     }
 }
