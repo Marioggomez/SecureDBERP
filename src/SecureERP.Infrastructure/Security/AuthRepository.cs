@@ -1,5 +1,4 @@
 using Microsoft.Data.SqlClient;
-using SecureERP.Application.Modules.Security.Abstractions;
 using SecureERP.Domain.Modules.Security;
 using SecureERP.Infrastructure.Persistence.Db;
 using SecureERP.Infrastructure.Persistence.Mapping;

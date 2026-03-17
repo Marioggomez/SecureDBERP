@@ -1,6 +1,4 @@
-using SecureERP.Domain.Modules.Security;
-
-namespace SecureERP.Application.Modules.Security.Abstractions;
+namespace SecureERP.Domain.Modules.Security;
 
 public interface IAuthRepository
 {

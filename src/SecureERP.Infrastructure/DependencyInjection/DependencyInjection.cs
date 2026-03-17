@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using SecureERP.Application.Abstractions.Context;
-using SecureERP.Application.Modules.Security.Abstractions;
+using SecureERP.Domain.Modules.Security;
 using SecureERP.Infrastructure.Auditing;
 using SecureERP.Infrastructure.Logging;
 using SecureERP.Infrastructure.Persistence.Commands;

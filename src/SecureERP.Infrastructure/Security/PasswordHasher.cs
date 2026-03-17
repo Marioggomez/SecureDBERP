@@ -1,4 +1,4 @@
-using SecureERP.Application.Modules.Security.Abstractions;
+using SecureERP.Domain.Modules.Security;
 using System.Security.Cryptography;
 
 namespace SecureERP.Infrastructure.Security;
