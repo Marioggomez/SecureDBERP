@@ -21,6 +21,11 @@ public static class Permissions
     public const string PurchaseRequestUpdate = "PURCHASE.REQUEST.UPDATE";
     public const string PurchaseRequestSubmit = "PURCHASE.REQUEST.SUBMIT";
     public const string PurchaseRequestApprove = "PURCHASE.REQUEST.APPROVE";
+    public const string PurchaseOrderRead = "PURCHASE.ORDER.READ";
+    public const string PurchaseOrderCreate = "PURCHASE.ORDER.CREATE";
+    public const string PurchaseOrderUpdate = "PURCHASE.ORDER.UPDATE";
+    public const string PurchaseOrderSubmit = "PURCHASE.ORDER.SUBMIT";
+    public const string PurchaseOrderApprove = "PURCHASE.ORDER.APPROVE";
 
     public const string SystemHealthRead = "SYSTEM.HEALTH.READ";
     public const string AuditSecurityEventRead = "AUDIT.SECURITY_EVENT.READ";
@@ -43,6 +48,11 @@ public static class Permissions
         PurchaseRequestUpdate,
         PurchaseRequestSubmit,
         PurchaseRequestApprove,
+        PurchaseOrderRead,
+        PurchaseOrderCreate,
+        PurchaseOrderUpdate,
+        PurchaseOrderSubmit,
+        PurchaseOrderApprove,
         SystemHealthRead,
         AuditSecurityEventRead
     ];

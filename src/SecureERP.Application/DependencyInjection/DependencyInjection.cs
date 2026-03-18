@@ -38,6 +38,13 @@ public static class DependencyInjection
         services.AddScoped<IUpsertPurchaseRequestDetailHandler, UpsertPurchaseRequestDetailHandler>();
         services.AddScoped<ISubmitPurchaseRequestHandler, SubmitPurchaseRequestHandler>();
         services.AddScoped<IApprovePurchaseRequestHandler, ApprovePurchaseRequestHandler>();
+        services.AddScoped<ICreatePurchaseOrderHandler, CreatePurchaseOrderHandler>();
+        services.AddScoped<IGetPurchaseOrderByIdHandler, GetPurchaseOrderByIdHandler>();
+        services.AddScoped<IListPurchaseOrdersHandler, ListPurchaseOrdersHandler>();
+        services.AddScoped<IUpdatePurchaseOrderDraftHandler, UpdatePurchaseOrderDraftHandler>();
+        services.AddScoped<IUpsertPurchaseOrderDetailHandler, UpsertPurchaseOrderDetailHandler>();
+        services.AddScoped<ISubmitPurchaseOrderHandler, SubmitPurchaseOrderHandler>();
+        services.AddScoped<IApprovePurchaseOrderHandler, ApprovePurchaseOrderHandler>();
         return services;
     }
 }

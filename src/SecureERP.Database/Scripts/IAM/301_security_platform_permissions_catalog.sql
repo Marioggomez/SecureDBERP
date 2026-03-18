@@ -69,6 +69,11 @@ VALUES
 (N'PURCHASE.REQUEST.UPDATE', N'PURCHASE', N'REQUEST', N'UPDATE', N'Permite actualizar solicitud de compra y su detalle mientras esta en borrador.', N'Actualizar solicitud de compra en borrador.', 0, 1, 1),
 (N'PURCHASE.REQUEST.SUBMIT', N'PURCHASE', N'REQUEST', N'SUBMIT', N'Permite enviar solicitud de compra al flujo de aprobacion.', N'Enviar solicitud de compra.', 0, 1, 1),
 (N'PURCHASE.REQUEST.APPROVE', N'PURCHASE', N'REQUEST', N'APPROVE', N'Permite aprobar solicitud de compra enviada. Requiere MFA y SoD.', N'Aprobar solicitud de compra.', 1, 1, 1),
+(N'PURCHASE.ORDER.READ', N'PURCHASE', N'ORDER', N'READ', N'Permite consultar ordenes de compra por contexto tenant/empresa.', N'Consultar ordenes de compra.', 0, 0, 1),
+(N'PURCHASE.ORDER.CREATE', N'PURCHASE', N'ORDER', N'CREATE', N'Permite crear ordenes de compra en estado borrador.', N'Crear orden de compra.', 0, 1, 1),
+(N'PURCHASE.ORDER.UPDATE', N'PURCHASE', N'ORDER', N'UPDATE', N'Permite actualizar orden de compra y su detalle mientras esta en borrador.', N'Actualizar orden de compra en borrador.', 0, 1, 1),
+(N'PURCHASE.ORDER.SUBMIT', N'PURCHASE', N'ORDER', N'SUBMIT', N'Permite enviar orden de compra al flujo de aprobacion.', N'Enviar orden de compra.', 0, 1, 1),
+(N'PURCHASE.ORDER.APPROVE', N'PURCHASE', N'ORDER', N'APPROVE', N'Permite aprobar orden de compra enviada. Requiere MFA y SoD.', N'Aprobar orden de compra.', 1, 1, 1),
 (N'SYSTEM.HEALTH.READ', N'SYSTEM', N'HEALTH', N'READ', N'Permite consultar estado operativo de endpoints de salud.', N'Consultar estado de salud del sistema.', 0, 0, 1),
 (N'AUDIT.SECURITY_EVENT.READ', N'AUDIT', N'SECURITY_EVENT', N'READ', N'Permite consultar eventos de seguridad y observabilidad.', N'Consultar eventos de seguridad.', 1, 1, 1);
 

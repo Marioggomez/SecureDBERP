@@ -29,6 +29,11 @@ Catalogo oficial de permisos para desarrollo de endpoints y bootstrap de segurid
 | `PURCHASE.REQUEST.UPDATE` | `PURCHASE` | `REQUEST` | `UPDATE` | Updates draft purchase request header and details. | Update draft purchase request. | No | Yes | Yes |
 | `PURCHASE.REQUEST.SUBMIT` | `PURCHASE` | `REQUEST` | `SUBMIT` | Submits draft purchase request to approval state. | Submit purchase request. | No | Yes | Yes |
 | `PURCHASE.REQUEST.APPROVE` | `PURCHASE` | `REQUEST` | `APPROVE` | Approves submitted purchase request with MFA and SoD enforcement. | Approve purchase request. | Yes | Yes | Yes |
+| `PURCHASE.ORDER.READ` | `PURCHASE` | `ORDER` | `READ` | Lists and reads purchase orders by tenant/company scope. | Read purchase orders. | No | No | Yes |
+| `PURCHASE.ORDER.CREATE` | `PURCHASE` | `ORDER` | `CREATE` | Creates draft purchase order header. | Create purchase order. | No | Yes | Yes |
+| `PURCHASE.ORDER.UPDATE` | `PURCHASE` | `ORDER` | `UPDATE` | Updates draft purchase order header and details. | Update draft purchase order. | No | Yes | Yes |
+| `PURCHASE.ORDER.SUBMIT` | `PURCHASE` | `ORDER` | `SUBMIT` | Submits draft purchase order to approval state. | Submit purchase order. | No | Yes | Yes |
+| `PURCHASE.ORDER.APPROVE` | `PURCHASE` | `ORDER` | `APPROVE` | Approves submitted purchase order with MFA and SoD enforcement. | Approve purchase order. | Yes | Yes | Yes |
 | `SYSTEM.HEALTH.READ` | `SYSTEM` | `HEALTH` | `READ` | Reads API health endpoints. | Read platform health. | No | No | Yes |
 | `AUDIT.SECURITY_EVENT.READ` | `AUDIT` | `SECURITY_EVENT` | `READ` | Reads security and observability events. | Read security events. | Yes | Yes | Yes |
 

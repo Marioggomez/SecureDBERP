@@ -32,6 +32,7 @@ public static class DependencyInjection
         services.AddScoped<IOrganizationPilotRepository>(provider => provider.GetRequiredService<BusinessPilotRepository>());
         services.AddScoped<IWorkflowPilotRepository>(provider => provider.GetRequiredService<BusinessPilotRepository>());
         services.AddScoped<IPurchaseRequestRepository, PurchaseRequestRepository>();
+        services.AddScoped<IPurchaseOrderRepository, PurchaseOrderRepository>();
         services.AddScoped<IAuthRepository, AuthRepository>();
         services.AddScoped<IAuthorizationRepository, AuthorizationRepository>();
         services.AddScoped<IOperationalSecurityRepository, OperationalSecurityRepository>();
