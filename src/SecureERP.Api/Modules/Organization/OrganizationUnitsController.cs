@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using SecureERP.Api.Modules.Security;
 using SecureERP.Application.Modules.Organization.Abstractions;
 using SecureERP.Application.Modules.Organization.DTOs;
+using SecureERP.Application.Modules.Security;
 
 namespace SecureERP.Api.Modules.Organization;
 
@@ -21,7 +22,7 @@ public sealed class OrganizationUnitsController : ControllerBase
     }
 
     [HttpGet]
-    [RequirePermission("ORGANIZATION.UNIT.READ")]
+    [RequirePermission(Permissions.OrganizationUnitRead)]
     [ProducesResponseType(typeof(IReadOnlyList<OrganizationUnitContract>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<OrganizationUnitContract>>> List(CancellationToken cancellationToken)
     {
@@ -43,7 +44,7 @@ public sealed class OrganizationUnitsController : ControllerBase
     }
 
     [HttpPost]
-    [RequirePermission("ORGANIZATION.UNIT.CREATE")]
+    [RequirePermission(Permissions.OrganizationUnitCreate)]
     [ProducesResponseType(typeof(CreateOrganizationUnitResponseContract), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(CreateOrganizationUnitResponseContract), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<CreateOrganizationUnitResponseContract>> Create(

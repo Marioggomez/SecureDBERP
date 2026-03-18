@@ -34,21 +34,8 @@ BEGIN
 END;
 GO
 
-IF EXISTS
-(
-    SELECT 1
-    FROM sys.security_policies p
-    INNER JOIN sys.security_predicates pr ON pr.object_id = p.object_id
-    WHERE p.name = N'RLS_scope_tenant_empresa'
-      AND SCHEMA_NAME(p.schema_id) = N'seguridad'
-      AND pr.target_object_id = OBJECT_ID(N'seguridad.contador_rate_limit')
-)
-BEGIN
-    -- Operational anti-abuse counters must be global and connection-agnostic to
-    -- prevent bypass before tenant/company resolution during login and session validation.
-    ALTER SECURITY POLICY seguridad.RLS_scope_tenant_empresa
-        DROP FILTER PREDICATE ON seguridad.contador_rate_limit;
-END;
+-- RLS exception for seguridad.contador_rate_limit is handled in prior hardening releases.
+-- Kept as no-op for idempotent operational releases.
 GO
 
 IF NOT EXISTS

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using SecureERP.Api.Modules.Security;
 using SecureERP.Application.Modules.Workflow.Abstractions;
 using SecureERP.Application.Modules.Workflow.DTOs;
+using SecureERP.Application.Modules.Security;
 
 namespace SecureERP.Api.Modules.Workflow;
 
@@ -21,7 +22,7 @@ public sealed class ApprovalInstancesController : ControllerBase
     }
 
     [HttpGet]
-    [RequirePermission("WORKFLOW.APPROVAL_INSTANCE.READ")]
+    [RequirePermission(Permissions.WorkflowApprovalInstanceRead)]
     [ProducesResponseType(typeof(IReadOnlyList<ApprovalInstanceContract>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<ApprovalInstanceContract>>> List(CancellationToken cancellationToken)
     {
@@ -44,7 +45,7 @@ public sealed class ApprovalInstancesController : ControllerBase
     }
 
     [HttpPost]
-    [RequirePermission("WORKFLOW.APPROVAL_INSTANCE.CREATE", true)]
+    [RequirePermission(Permissions.WorkflowApprovalInstanceCreate, true)]
     [ProducesResponseType(typeof(CreateApprovalInstanceResponseContract), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(CreateApprovalInstanceResponseContract), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<CreateApprovalInstanceResponseContract>> Create(
