@@ -16,6 +16,7 @@ Cierre formal del modulo de seguridad para desarrollo reutilizable:
 - Permissions class: `src/SecureERP.Application/Modules/Security/Permissions.cs`
 - Endpoint standard: `docs/security/secure-endpoint-standard.md`
 - Permissions catalog: `docs/security/permissions-catalog.md`
+- Layer contract: `docs/security/layer-responsibility-contract.md`
 
 ## Bootstrap Result
 `302_security_platform_bootstrap.sql` deja:

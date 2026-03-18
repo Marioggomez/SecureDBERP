@@ -2,30 +2,24 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using System.Data;
 
-namespace SecureERP.Api.Health;
+namespace SecureERP.Infrastructure.Health;
 
 public sealed class SqlServerReadyHealthCheck : IHealthCheck
 {
-    private readonly IConfiguration _configuration;
+    private readonly string _connectionString;
 
-    public SqlServerReadyHealthCheck(IConfiguration configuration)
+    public SqlServerReadyHealthCheck(string connectionString)
     {
-        _configuration = configuration;
+        _connectionString = connectionString;
     }
 
     public async Task<HealthCheckResult> CheckHealthAsync(
         HealthCheckContext context,
         CancellationToken cancellationToken = default)
     {
-        string? connectionString = _configuration.GetConnectionString("SecureERP");
-        if (string.IsNullOrWhiteSpace(connectionString))
-        {
-            return HealthCheckResult.Unhealthy("Connection string 'SecureERP' is not configured.");
-        }
-
         try
         {
-            await using SqlConnection connection = new(connectionString);
+            await using SqlConnection connection = new(_connectionString);
             await connection.OpenAsync(cancellationToken);
 
             await using SqlCommand command = connection.CreateCommand();
