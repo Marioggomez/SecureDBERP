@@ -29,6 +29,7 @@ public sealed class AuthorizationRepository : IAuthorizationRepository
     {
         await using SqlConnection connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync(cancellationToken);
+        await _sessionContextApplier.ApplyAsync(connection, cancellationToken);
 
         await using SqlCommand command = connection.CreateCommand();
         command.CommandType = CommandType.StoredProcedure;

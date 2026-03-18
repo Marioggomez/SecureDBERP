@@ -12,6 +12,8 @@ public sealed class SecurityContextMiddleware
         "/",
         "/health",
         "/api/v1/auth/login",
+        "/api/v1/auth/mfa/challenge",
+        "/api/v1/auth/mfa/verify",
         "/api/v1/auth/select-company",
         "/api/v1/auth/validate-session"
     ];
@@ -32,6 +34,7 @@ public sealed class SecurityContextMiddleware
         string path = context.Request.Path.Value ?? string.Empty;
         if (IsPublicPath(path))
         {
+            await TrySetRequestContextFromBearerTokenAsync(context, requestContextAccessor, validateSessionHandler);
             await _next(context);
             return;
         }
@@ -94,6 +97,38 @@ public sealed class SecurityContextMiddleware
         }
 
         await _next(context);
+    }
+
+    private static async Task TrySetRequestContextFromBearerTokenAsync(
+        HttpContext context,
+        IRequestContextAccessor requestContextAccessor,
+        IValidateSessionHandler validateSessionHandler)
+    {
+        string? token = ExtractBearerToken(context.Request.Headers.Authorization);
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            return;
+        }
+
+        ValidateSessionResult session = await validateSessionHandler.HandleAsync(
+            new ValidateSessionRequest(token),
+            context.RequestAborted);
+
+        if (!session.IsValid ||
+            session.UserId is null ||
+            session.TenantId is null ||
+            session.SessionId is null)
+        {
+            return;
+        }
+
+        RequestContext current = requestContextAccessor.Current;
+        requestContextAccessor.SetCurrent(new RequestContext(
+            session.TenantId,
+            session.CompanyId,
+            session.UserId,
+            session.SessionId,
+            current.CorrelationId));
     }
 
     private static bool IsPublicPath(string path)

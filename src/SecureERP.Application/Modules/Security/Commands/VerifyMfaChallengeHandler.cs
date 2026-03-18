@@ -64,7 +64,7 @@ public sealed class VerifyMfaChallengeHandler : IVerifyMfaChallengeHandler
                     challenge.TenantId,
                     challenge.CompanyId,
                     challenge.UserId,
-                    _requestContextAccessor.Current.SessionId,
+                    challenge.SessionId,
                     challenge.AuthFlowId,
                     ParseCorrelationId(_requestContextAccessor.Current.CorrelationId),
                     null,
@@ -74,11 +74,28 @@ public sealed class VerifyMfaChallengeHandler : IVerifyMfaChallengeHandler
         }
 
         await _authRepository.MarkMfaChallengeValidatedAsync(challenge.ChallengeId, cancellationToken);
-        await _authRepository.MarkAuthFlowMfaValidatedAsync(challenge.AuthFlowId, cancellationToken);
-
-        if (_requestContextAccessor.Current.SessionId is Guid sessionId)
+        if (challenge.Purpose == MfaPurpose.Login)
         {
-            await _authRepository.MarkSessionMfaValidatedAsync(sessionId, cancellationToken);
+            if (challenge.AuthFlowId is null)
+            {
+                return VerifyMfaChallengeResponse.Failure("MFA_AUTH_FLOW_REQUIRED", "Login MFA challenge requires AuthFlow.");
+            }
+
+            await _authRepository.MarkAuthFlowMfaValidatedAsync(challenge.AuthFlowId.Value, cancellationToken);
+        }
+        else if (challenge.Purpose == MfaPurpose.StepUp)
+        {
+            RequestContext context = _requestContextAccessor.Current;
+            if (context.SessionId is null || challenge.SessionId is null || context.SessionId.Value != challenge.SessionId.Value)
+            {
+                return VerifyMfaChallengeResponse.Failure("MFA_SESSION_CONTEXT_REQUIRED", "Valid session context is required for step-up MFA verification.");
+            }
+
+            await _authRepository.MarkSessionMfaValidatedAsync(challenge.SessionId.Value, cancellationToken);
+        }
+        else
+        {
+            return VerifyMfaChallengeResponse.Failure("MFA_PURPOSE_INVALID", "Unsupported MFA purpose.");
         }
 
         await _authRepository.WriteSecurityEventAsync(
@@ -90,7 +107,7 @@ public sealed class VerifyMfaChallengeHandler : IVerifyMfaChallengeHandler
                 challenge.TenantId,
                 challenge.CompanyId,
                 challenge.UserId,
-                _requestContextAccessor.Current.SessionId,
+                challenge.SessionId,
                 challenge.AuthFlowId,
                 ParseCorrelationId(_requestContextAccessor.Current.CorrelationId),
                 null,

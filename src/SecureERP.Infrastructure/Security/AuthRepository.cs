@@ -42,6 +42,7 @@ public sealed class AuthRepository : IAuthRepository
     {
         await using SqlConnection connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync(cancellationToken);
+        await ApplyTenantLookupContextAsync(connection, tenantCode, cancellationToken);
 
         await using SqlCommand command = CreateStoredProcedureCommand(connection, LoginLookupProcedure);
         command.Parameters.Add(SqlParameterFactory.NVarChar("@tenant_codigo", tenantCode, 50));
@@ -62,7 +63,7 @@ public sealed class AuthRepository : IAuthRepository
         string? email = reader.IsDBNull(reader.GetOrdinal("correo_electronico")) ? null : reader.GetString(reader.GetOrdinal("correo_electronico"));
         bool mfaEnabled = reader.GetBoolean(reader.GetOrdinal("mfa_habilitado"));
         bool requiresPasswordChange = reader.GetBoolean(reader.GetOrdinal("requiere_cambio_clave"));
-        int userStatusId = reader.GetInt32(reader.GetOrdinal("id_estado_usuario"));
+        int userStatusId = reader.GetInt16(reader.GetOrdinal("id_estado_usuario"));
         bool isActiveUser = reader.GetBoolean(reader.GetOrdinal("activo_usuario"));
         byte[] passwordHash = (byte[])reader["hash_clave"];
         byte[] passwordSalt = (byte[])reader["salt_clave"];
@@ -98,6 +99,8 @@ public sealed class AuthRepository : IAuthRepository
 
         await using SqlConnection connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync(cancellationToken);
+        await _sessionContextApplier.ApplyAsync(connection, cancellationToken);
+        await SetSessionContextAsync(connection, "es_admin_tenant", 1, cancellationToken);
 
         await using SqlCommand command = CreateStoredProcedureCommand(connection, OperableCompaniesProcedure);
         command.Parameters.Add(SqlParameterFactory.BigInt("@id_usuario", userId));
@@ -141,6 +144,7 @@ public sealed class AuthRepository : IAuthRepository
     {
         await using SqlConnection connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync(cancellationToken);
+        await _sessionContextApplier.ApplyAsync(connection, cancellationToken);
 
         await using SqlCommand command = CreateStoredProcedureCommand(connection, GetAuthFlowProcedure);
         command.Parameters.Add(SqlParameterFactory.UniqueIdentifier("@id_flujo_autenticacion", authFlowId));
@@ -268,6 +272,7 @@ public sealed class AuthRepository : IAuthRepository
         command.Parameters.Add(SqlParameterFactory.BigInt("@id_usuario", challenge.UserId));
         command.Parameters.Add(SqlParameterFactory.BigInt("@id_tenant", challenge.TenantId));
         command.Parameters.Add(SqlParameterFactory.BigInt("@id_empresa", challenge.CompanyId));
+        command.Parameters.Add(SqlParameterFactory.UniqueIdentifier("@id_sesion_usuario", challenge.SessionId));
         command.Parameters.Add(SqlParameterFactory.UniqueIdentifier("@id_flujo_autenticacion", challenge.AuthFlowId));
         command.Parameters.Add(SqlParameterFactory.SmallInt("@id_proposito_desafio_mfa", (short)challenge.Purpose));
         command.Parameters.Add(SqlParameterFactory.SmallInt("@id_canal_notificacion", (short)challenge.Channel));
@@ -284,6 +289,7 @@ public sealed class AuthRepository : IAuthRepository
     {
         await using SqlConnection connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync(cancellationToken);
+        await _sessionContextApplier.ApplyAsync(connection, cancellationToken);
 
         await using SqlCommand command = CreateStoredProcedureCommand(connection, GetMfaChallengeProcedure);
         command.Parameters.Add(SqlParameterFactory.UniqueIdentifier("@id_desafio_mfa", challengeId));
@@ -296,10 +302,16 @@ public sealed class AuthRepository : IAuthRepository
 
         return new MfaChallengeSnapshot(
             reader.GetGuid(reader.GetOrdinal("id_desafio_mfa")),
-            reader.GetGuid(reader.GetOrdinal("id_flujo_autenticacion")),
+            reader.IsDBNull(reader.GetOrdinal("id_flujo_autenticacion"))
+                ? null
+                : reader.GetGuid(reader.GetOrdinal("id_flujo_autenticacion")),
+            reader.IsDBNull(reader.GetOrdinal("id_sesion_usuario"))
+                ? null
+                : reader.GetGuid(reader.GetOrdinal("id_sesion_usuario")),
             reader.GetInt64(reader.GetOrdinal("id_usuario")),
             reader.GetInt64(reader.GetOrdinal("id_tenant")),
             reader.IsDBNull(reader.GetOrdinal("id_empresa")) ? null : reader.GetInt64(reader.GetOrdinal("id_empresa")),
+            (MfaPurpose)reader.GetInt16(reader.GetOrdinal("id_proposito_desafio_mfa")),
             (byte[])reader["otp_hash"],
             (byte[])reader["otp_salt"],
             reader.GetDateTime(reader.GetOrdinal("expira_en_utc")),
@@ -366,5 +378,40 @@ public sealed class AuthRepository : IAuthRepository
         command.CommandType = CommandType.StoredProcedure;
         command.CommandText = procedure;
         return command;
+    }
+
+    private static async Task ApplyTenantLookupContextAsync(
+        SqlConnection connection,
+        string tenantCode,
+        CancellationToken cancellationToken)
+    {
+        await using SqlCommand tenantCommand = connection.CreateCommand();
+        tenantCommand.CommandType = CommandType.Text;
+        tenantCommand.CommandText = "SELECT TOP (1) id_tenant FROM plataforma.tenant WHERE codigo = @codigo;";
+        tenantCommand.Parameters.Add(SqlParameterFactory.NVarChar("@codigo", tenantCode, 100));
+        object? tenantValue = await tenantCommand.ExecuteScalarAsync(cancellationToken);
+        if (tenantValue is null || tenantValue == DBNull.Value)
+        {
+            return;
+        }
+
+        long tenantId = Convert.ToInt64(tenantValue);
+        await SetSessionContextAsync(connection, "id_tenant", tenantId, cancellationToken);
+        await SetSessionContextAsync(connection, "es_admin_tenant", 1, cancellationToken);
+    }
+
+    private static async Task SetSessionContextAsync(
+        SqlConnection connection,
+        string key,
+        object value,
+        CancellationToken cancellationToken)
+    {
+        await using SqlCommand command = connection.CreateCommand();
+        command.CommandType = CommandType.StoredProcedure;
+        command.CommandText = "sys.sp_set_session_context";
+        command.Parameters.Add(SqlParameterFactory.NVarChar("@key", key, 128));
+        command.Parameters.Add(SqlParameterFactory.Variant("@value", value));
+        command.Parameters.Add(SqlParameterFactory.Bit("@read_only", false));
+        await command.ExecuteNonQueryAsync(cancellationToken);
     }
 }

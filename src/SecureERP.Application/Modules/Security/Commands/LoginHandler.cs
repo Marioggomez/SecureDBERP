@@ -89,6 +89,14 @@ public sealed class LoginHandler : ILoginHandler
             return LoginResponse.Failure("LOGIN_INVALID_CREDENTIALS", "Invalid credentials.");
         }
 
+        RequestContext currentContext = _requestContextAccessor.Current;
+        _requestContextAccessor.SetCurrent(new RequestContext(
+            user.TenantId,
+            user.CompanyId == 0 ? null : user.CompanyId,
+            user.UserId,
+            null,
+            currentContext.CorrelationId));
+
         IReadOnlyList<OperableCompany> companies = await _authRepository.GetOperableCompaniesAsync(
             user.UserId,
             user.TenantId,
@@ -101,7 +109,6 @@ public sealed class LoginHandler : ILoginHandler
 
         Guid authFlowId = Guid.NewGuid();
         DateTime now = DateTime.UtcNow;
-        RequestContext currentContext = _requestContextAccessor.Current;
         _requestContextAccessor.SetCurrent(new RequestContext(
             user.TenantId,
             null,
