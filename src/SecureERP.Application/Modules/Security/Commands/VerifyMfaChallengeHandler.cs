@@ -1,4 +1,5 @@
 using SecureERP.Application.Abstractions.Context;
+using SecureERP.Application.Modules.Security;
 using SecureERP.Application.Modules.Security.Abstractions;
 using SecureERP.Application.Modules.Security.DTOs;
 using SecureERP.Domain.Modules.Security;
@@ -30,7 +31,7 @@ public sealed class VerifyMfaChallengeHandler : IVerifyMfaChallengeHandler
         RequestContext current = _requestContextAccessor.Current;
         string safeIp = string.IsNullOrWhiteSpace(request.IpAddress) ? "0.0.0.0" : request.IpAddress.Trim();
         OperationalSecurityDecision guard = await _operationalSecurityService.GuardAsync(
-            "AUTH.MFA.VERIFY",
+            Permissions.AuthMfaVerify,
             safeIp,
             request.ChallengeId.ToString(),
             current.TenantId,

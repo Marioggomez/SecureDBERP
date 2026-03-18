@@ -1,4 +1,5 @@
 using SecureERP.Application.Abstractions.Context;
+using SecureERP.Application.Modules.Security;
 using SecureERP.Application.Modules.Security.Abstractions;
 using SecureERP.Application.Modules.Security.DTOs;
 using SecureERP.Application.Modules.Workflow.Abstractions;
@@ -50,7 +51,7 @@ public sealed class CreateApprovalInstanceHandler : ICreateApprovalInstanceHandl
         }
 
         OperationalSecurityDecision guard = await _operationalSecurityService.GuardAsync(
-            "WORKFLOW.APPROVAL_INSTANCE.CREATE",
+            Permissions.WorkflowApprovalInstanceCreate,
             request.IpAddress,
             $"USER:{context.UserId.Value}",
             context.TenantId,

@@ -1,6 +1,7 @@
 using SecureERP.Application.Abstractions.Context;
 using SecureERP.Application.Modules.Purchase.Abstractions;
 using SecureERP.Application.Modules.Purchase.DTOs;
+using SecureERP.Application.Modules.Security;
 using SecureERP.Application.Modules.Security.Abstractions;
 using SecureERP.Application.Modules.Security.DTOs;
 using SecureERP.Domain.Modules.Purchase;
@@ -43,7 +44,7 @@ public sealed class SubmitPurchaseRequestHandler : ISubmitPurchaseRequestHandler
         }
 
         OperationalSecurityDecision guard = await _operationalSecurityService.GuardAsync(
-            "PURCHASE.REQUEST.SUBMIT",
+            Permissions.PurchaseRequestSubmit,
             request.IpAddress,
             $"USER:{context.UserId.Value}",
             context.TenantId,
