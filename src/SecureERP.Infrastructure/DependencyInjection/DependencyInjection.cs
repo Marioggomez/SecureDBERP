@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using SecureERP.Application.Abstractions.Context;
 using SecureERP.Domain.Modules.Organization;
+using SecureERP.Domain.Modules.Purchase;
 using SecureERP.Domain.Modules.Security;
 using SecureERP.Domain.Modules.Workflow;
 using SecureERP.Infrastructure.Auditing;
@@ -30,6 +31,7 @@ public static class DependencyInjection
         services.AddScoped<BusinessPilotRepository>();
         services.AddScoped<IOrganizationPilotRepository>(provider => provider.GetRequiredService<BusinessPilotRepository>());
         services.AddScoped<IWorkflowPilotRepository>(provider => provider.GetRequiredService<BusinessPilotRepository>());
+        services.AddScoped<IPurchaseRequestRepository, PurchaseRequestRepository>();
         services.AddScoped<IAuthRepository, AuthRepository>();
         services.AddScoped<IAuthorizationRepository, AuthorizationRepository>();
         services.AddScoped<IOperationalSecurityRepository, OperationalSecurityRepository>();

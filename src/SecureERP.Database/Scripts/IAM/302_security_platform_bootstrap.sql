@@ -484,7 +484,9 @@ USING
     (N'AUTH.MFA.CHALLENGE', 60, 6, NULL, 0, 1),
     (N'AUTH.MFA.VERIFY', 60, 8, NULL, 0, 1),
     (N'AUTH.VALIDATE_SESSION', 60, 20, NULL, 0, 1),
-    (N'WORKFLOW.APPROVAL_INSTANCE.CREATE', 60, 10, NULL, 0, 1)
+    (N'WORKFLOW.APPROVAL_INSTANCE.CREATE', 60, 10, NULL, 0, 1),
+    (N'PURCHASE.REQUEST.SUBMIT', 60, 12, NULL, 0, 1),
+    (N'PURCHASE.REQUEST.APPROVE', 60, 8, NULL, 0, 1)
 ) AS source(codigo_accion, ventana_segundos, max_intentos, lockout_minutos, aplica_lockout, activo)
 ON target.codigo_accion = source.codigo_accion
 WHEN MATCHED THEN
@@ -653,6 +655,13 @@ VALUES
 (N'ORGANIZATION.UNIT.CREATE', N'ORGANIZATION', N'OrganizationUnitsController', N'Create', N'POST', N'/api/v1/organization/units', N'Creacion de unidad organizativa.', N'ORGANIZATION.UNIT.CREATE', 1, 1, 1, 0, 0, 1, 0, NULL, 1),
 (N'WORKFLOW.APPROVAL_INSTANCE.READ', N'WORKFLOW', N'ApprovalInstancesController', N'List', N'GET', N'/api/v1/workflow/approval-instances', N'Listado de instancias de aprobacion.', N'WORKFLOW.APPROVAL_INSTANCE.READ', 1, 1, 1, 0, 0, 1, 0, NULL, 1),
 (N'WORKFLOW.APPROVAL_INSTANCE.CREATE', N'WORKFLOW', N'ApprovalInstancesController', N'Create', N'POST', N'/api/v1/workflow/approval-instances', N'Creacion de instancia de aprobacion sensible.', N'WORKFLOW.APPROVAL_INSTANCE.CREATE', 1, 1, 1, 0, 1, 1, 0, NULL, 1),
+(N'PURCHASE.REQUEST.CREATE', N'PURCHASE', N'PurchaseRequestsController', N'Create', N'POST', N'/api/v1/purchase/requests', N'Crear solicitud de compra.', N'PURCHASE.REQUEST.CREATE', 1, 1, 1, 0, 0, 1, 0, N'PURCHASE.REQUEST', 1),
+(N'PURCHASE.REQUEST.READ.ONE', N'PURCHASE', N'PurchaseRequestsController', N'GetById', N'GET', N'/api/v1/purchase/requests/{id}', N'Obtener solicitud de compra por id.', N'PURCHASE.REQUEST.READ', 1, 1, 1, 0, 0, 1, 0, N'PURCHASE.REQUEST', 1),
+(N'PURCHASE.REQUEST.READ.LIST', N'PURCHASE', N'PurchaseRequestsController', N'List', N'GET', N'/api/v1/purchase/requests', N'Listar solicitudes de compra visibles.', N'PURCHASE.REQUEST.READ', 1, 1, 1, 0, 0, 1, 0, N'PURCHASE.REQUEST', 1),
+(N'PURCHASE.REQUEST.UPDATE', N'PURCHASE', N'PurchaseRequestsController', N'UpdateDraft', N'PUT', N'/api/v1/purchase/requests/{id}', N'Actualizar solicitud en borrador.', N'PURCHASE.REQUEST.UPDATE', 1, 1, 1, 0, 0, 1, 0, N'PURCHASE.REQUEST', 1),
+(N'PURCHASE.REQUEST.DETAIL.UPSERT', N'PURCHASE', N'PurchaseRequestsController', N'UpsertDetail', N'PUT', N'/api/v1/purchase/requests/{id}/details', N'Guardar detalle en borrador.', N'PURCHASE.REQUEST.UPDATE', 1, 1, 1, 0, 0, 1, 0, N'PURCHASE.REQUEST', 1),
+(N'PURCHASE.REQUEST.SUBMIT', N'PURCHASE', N'PurchaseRequestsController', N'Submit', N'POST', N'/api/v1/purchase/requests/{id}/submit', N'Enviar solicitud de compra.', N'PURCHASE.REQUEST.SUBMIT', 1, 1, 1, 0, 0, 1, 0, N'PURCHASE.REQUEST', 1),
+(N'PURCHASE.REQUEST.APPROVE', N'PURCHASE', N'PurchaseRequestsController', N'Approve', N'POST', N'/api/v1/purchase/requests/{id}/approve', N'Aprobar solicitud de compra sensible.', N'PURCHASE.REQUEST.APPROVE', 1, 1, 1, 0, 1, 1, 0, N'PURCHASE.REQUEST', 1),
 (N'SYSTEM.HEALTH.READ', N'SYSTEM', N'Health', N'Read', N'GET', N'/health', N'Consulta de estado general.', N'SYSTEM.HEALTH.READ', 0, 0, 0, 0, 0, 0, 0, NULL, 1),
 (N'SYSTEM.HEALTH.READY', N'SYSTEM', N'Health', N'Readiness', N'GET', N'/health/ready', N'Readiness de dependencias.', N'SYSTEM.HEALTH.READ', 0, 0, 0, 0, 0, 0, 0, NULL, 1),
 (N'SYSTEM.HEALTH.LIVE', N'SYSTEM', N'Health', N'Liveness', N'GET', N'/health/live', N'Liveness endpoint.', N'SYSTEM.HEALTH.READ', 0, 0, 0, 0, 0, 0, 0, NULL, 1);

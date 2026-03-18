@@ -97,6 +97,8 @@ public async Task SensitiveEndpoint_ShouldRateLimitAfterThreshold()
 - Read endpoint: `src/SecureERP.Api/Modules/Organization/OrganizationUnitsController.cs`
 - Write endpoint: `src/SecureERP.Api/Modules/Organization/OrganizationUnitsController.cs`
 - Sensitive MFA endpoint: `src/SecureERP.Api/Modules/Workflow/ApprovalInstancesController.cs`
+- End-to-end business module reference: `src/SecureERP.Api/Modules/Purchase/PurchaseRequestsController.cs`
 - Security middleware: `src/SecureERP.Api/Middleware/SecurityContextMiddleware.cs`
 - Anti-abuse tests: `tests/SecureERP.Tests/Integration/OperationalSecurityPhase5aIntegrationTests.cs`
 - RLS/integration tests: `tests/SecureERP.Tests/Integration/BusinessPilotPhase4IntegrationTests.cs`
+- Purchase request tests template: `tests/SecureERP.Tests/Integration/PurchaseRequestModuleIntegrationTests.cs`

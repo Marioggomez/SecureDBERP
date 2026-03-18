@@ -16,6 +16,11 @@ public static class Permissions
 
     public const string WorkflowApprovalInstanceRead = "WORKFLOW.APPROVAL_INSTANCE.READ";
     public const string WorkflowApprovalInstanceCreate = "WORKFLOW.APPROVAL_INSTANCE.CREATE";
+    public const string PurchaseRequestRead = "PURCHASE.REQUEST.READ";
+    public const string PurchaseRequestCreate = "PURCHASE.REQUEST.CREATE";
+    public const string PurchaseRequestUpdate = "PURCHASE.REQUEST.UPDATE";
+    public const string PurchaseRequestSubmit = "PURCHASE.REQUEST.SUBMIT";
+    public const string PurchaseRequestApprove = "PURCHASE.REQUEST.APPROVE";
 
     public const string SystemHealthRead = "SYSTEM.HEALTH.READ";
     public const string AuditSecurityEventRead = "AUDIT.SECURITY_EVENT.READ";
@@ -33,6 +38,11 @@ public static class Permissions
         OrganizationUnitCreate,
         WorkflowApprovalInstanceRead,
         WorkflowApprovalInstanceCreate,
+        PurchaseRequestRead,
+        PurchaseRequestCreate,
+        PurchaseRequestUpdate,
+        PurchaseRequestSubmit,
+        PurchaseRequestApprove,
         SystemHealthRead,
         AuditSecurityEventRead
     ];

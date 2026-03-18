@@ -24,6 +24,11 @@ Catalogo oficial de permisos para desarrollo de endpoints y bootstrap de segurid
 | `ORGANIZATION.UNIT.CREATE` | `ORGANIZATION` | `UNIT` | `CREATE` | Creates organization unit in active tenant/company. | Create organization unit. | No | Yes | Yes |
 | `WORKFLOW.APPROVAL_INSTANCE.READ` | `WORKFLOW` | `APPROVAL_INSTANCE` | `READ` | Lists approval instances with RLS and authorization. | Read approval instances. | No | No | Yes |
 | `WORKFLOW.APPROVAL_INSTANCE.CREATE` | `WORKFLOW` | `APPROVAL_INSTANCE` | `CREATE` | Creates sensitive approval instance. | Create approval instance. | Yes | Yes | Yes |
+| `PURCHASE.REQUEST.READ` | `PURCHASE` | `REQUEST` | `READ` | Lists and reads purchase requests by tenant/company scope. | Read purchase requests. | No | No | Yes |
+| `PURCHASE.REQUEST.CREATE` | `PURCHASE` | `REQUEST` | `CREATE` | Creates draft purchase request header. | Create purchase request. | No | Yes | Yes |
+| `PURCHASE.REQUEST.UPDATE` | `PURCHASE` | `REQUEST` | `UPDATE` | Updates draft purchase request header and details. | Update draft purchase request. | No | Yes | Yes |
+| `PURCHASE.REQUEST.SUBMIT` | `PURCHASE` | `REQUEST` | `SUBMIT` | Submits draft purchase request to approval state. | Submit purchase request. | No | Yes | Yes |
+| `PURCHASE.REQUEST.APPROVE` | `PURCHASE` | `REQUEST` | `APPROVE` | Approves submitted purchase request with MFA and SoD enforcement. | Approve purchase request. | Yes | Yes | Yes |
 | `SYSTEM.HEALTH.READ` | `SYSTEM` | `HEALTH` | `READ` | Reads API health endpoints. | Read platform health. | No | No | Yes |
 | `AUDIT.SECURITY_EVENT.READ` | `AUDIT` | `SECURITY_EVENT` | `READ` | Reads security and observability events. | Read security events. | Yes | Yes | Yes |
 

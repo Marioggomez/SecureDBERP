@@ -2,6 +2,9 @@ using Microsoft.Extensions.DependencyInjection;
 using SecureERP.Application.Modules.Organization.Abstractions;
 using SecureERP.Application.Modules.Organization.Commands;
 using SecureERP.Application.Modules.Organization.Queries;
+using SecureERP.Application.Modules.Purchase.Abstractions;
+using SecureERP.Application.Modules.Purchase.Commands;
+using SecureERP.Application.Modules.Purchase.Queries;
 using SecureERP.Application.Modules.Security.Abstractions;
 using SecureERP.Application.Modules.Security.Commands;
 using SecureERP.Application.Modules.Security.Queries;
@@ -28,6 +31,13 @@ public static class DependencyInjection
         services.AddScoped<ICreateOrganizationUnitHandler, CreateOrganizationUnitHandler>();
         services.AddScoped<IListApprovalInstancesHandler, ListApprovalInstancesHandler>();
         services.AddScoped<ICreateApprovalInstanceHandler, CreateApprovalInstanceHandler>();
+        services.AddScoped<ICreatePurchaseRequestHandler, CreatePurchaseRequestHandler>();
+        services.AddScoped<IGetPurchaseRequestByIdHandler, GetPurchaseRequestByIdHandler>();
+        services.AddScoped<IListPurchaseRequestsHandler, ListPurchaseRequestsHandler>();
+        services.AddScoped<IUpdatePurchaseRequestDraftHandler, UpdatePurchaseRequestDraftHandler>();
+        services.AddScoped<IUpsertPurchaseRequestDetailHandler, UpsertPurchaseRequestDetailHandler>();
+        services.AddScoped<ISubmitPurchaseRequestHandler, SubmitPurchaseRequestHandler>();
+        services.AddScoped<IApprovePurchaseRequestHandler, ApprovePurchaseRequestHandler>();
         return services;
     }
 }

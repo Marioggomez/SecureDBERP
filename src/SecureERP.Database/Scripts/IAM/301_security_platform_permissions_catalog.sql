@@ -64,6 +64,11 @@ VALUES
 (N'ORGANIZATION.UNIT.CREATE', N'ORGANIZATION', N'UNIT', N'CREATE', N'Permite crear unidades organizativas en tenant/empresa activos.', N'Crear unidad organizativa.', 0, 1, 1),
 (N'WORKFLOW.APPROVAL_INSTANCE.READ', N'WORKFLOW', N'APPROVAL_INSTANCE', N'READ', N'Permite consultar instancias de aprobacion respetando permisos y RLS.', N'Consultar instancias de aprobacion.', 0, 0, 1),
 (N'WORKFLOW.APPROVAL_INSTANCE.CREATE', N'WORKFLOW', N'APPROVAL_INSTANCE', N'CREATE', N'Permite crear instancias de aprobacion; operacion sensible con MFA.', N'Crear instancia de aprobacion.', 1, 1, 1),
+(N'PURCHASE.REQUEST.READ', N'PURCHASE', N'REQUEST', N'READ', N'Permite consultar solicitudes de compra por contexto tenant/empresa.', N'Consultar solicitudes de compra.', 0, 0, 1),
+(N'PURCHASE.REQUEST.CREATE', N'PURCHASE', N'REQUEST', N'CREATE', N'Permite crear solicitudes de compra en estado borrador.', N'Crear solicitud de compra.', 0, 1, 1),
+(N'PURCHASE.REQUEST.UPDATE', N'PURCHASE', N'REQUEST', N'UPDATE', N'Permite actualizar solicitud de compra y su detalle mientras esta en borrador.', N'Actualizar solicitud de compra en borrador.', 0, 1, 1),
+(N'PURCHASE.REQUEST.SUBMIT', N'PURCHASE', N'REQUEST', N'SUBMIT', N'Permite enviar solicitud de compra al flujo de aprobacion.', N'Enviar solicitud de compra.', 0, 1, 1),
+(N'PURCHASE.REQUEST.APPROVE', N'PURCHASE', N'REQUEST', N'APPROVE', N'Permite aprobar solicitud de compra enviada. Requiere MFA y SoD.', N'Aprobar solicitud de compra.', 1, 1, 1),
 (N'SYSTEM.HEALTH.READ', N'SYSTEM', N'HEALTH', N'READ', N'Permite consultar estado operativo de endpoints de salud.', N'Consultar estado de salud del sistema.', 0, 0, 1),
 (N'AUDIT.SECURITY_EVENT.READ', N'AUDIT', N'SECURITY_EVENT', N'READ', N'Permite consultar eventos de seguridad y observabilidad.', N'Consultar eventos de seguridad.', 1, 1, 1);
 
