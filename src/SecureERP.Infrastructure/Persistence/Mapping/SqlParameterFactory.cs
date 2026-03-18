@@ -14,6 +14,9 @@ public static class SqlParameterFactory
     public static SqlParameter SmallInt(string name, short? value)
         => Create(name, SqlDbType.SmallInt, value ?? (object)DBNull.Value);
 
+    public static SqlParameter TinyInt(string name, byte? value)
+        => Create(name, SqlDbType.TinyInt, value ?? (object)DBNull.Value);
+
     public static SqlParameter BigInt(string name, long? value)
         => Create(name, SqlDbType.BigInt, value ?? (object)DBNull.Value);
 
@@ -52,6 +55,15 @@ public static class SqlParameterFactory
     public static SqlParameter VarBinary(string name, byte[]? value, int size)
     {
         SqlParameter parameter = new(name, SqlDbType.VarBinary, size)
+        {
+            Value = value is null ? DBNull.Value : value
+        };
+        return parameter;
+    }
+
+    public static SqlParameter Binary(string name, byte[]? value, int size)
+    {
+        SqlParameter parameter = new(name, SqlDbType.Binary, size)
         {
             Value = value is null ? DBNull.Value : value
         };

@@ -134,16 +134,21 @@ internal sealed class IamTestScope : IAsyncDisposable
 
         await Exec(connection, "DELETE FROM observabilidad.auditoria_autorizacion WHERE id_tenant=@t AND id_usuario=@u;", ("@t", SqlDbType.BigInt, TenantId), ("@u", SqlDbType.BigInt, UserId));
         await Exec(connection, "DELETE FROM seguridad.security_event_audit WHERE id_tenant=@t AND id_usuario=@u;", ("@t", SqlDbType.BigInt, TenantId), ("@u", SqlDbType.BigInt, UserId));
+        await Exec(connection, "DELETE FROM cumplimiento.accion_instancia_aprobacion WHERE id_tenant=@t;", ("@t", SqlDbType.BigInt, TenantId));
+        await Exec(connection, "DELETE FROM cumplimiento.instancia_aprobacion WHERE id_tenant=@t;", ("@t", SqlDbType.BigInt, TenantId));
+        await Exec(connection, "DELETE FROM cumplimiento.perfil_aprobacion WHERE id_tenant=@t;", ("@t", SqlDbType.BigInt, TenantId));
+        await Exec(connection, "DELETE FROM seguridad.usuario_scope_unidad WHERE id_tenant=@t AND id_usuario=@u;", ("@t", SqlDbType.BigInt, TenantId), ("@u", SqlDbType.BigInt, UserId));
         await Exec(connection, "DELETE FROM seguridad.desafio_mfa WHERE id_tenant=@t AND id_usuario=@u;", ("@t", SqlDbType.BigInt, TenantId), ("@u", SqlDbType.BigInt, UserId));
         await Exec(connection, "DELETE FROM seguridad.sesion_usuario WHERE id_tenant=@t AND id_usuario=@u;", ("@t", SqlDbType.BigInt, TenantId), ("@u", SqlDbType.BigInt, UserId));
         await Exec(connection, "DELETE FROM seguridad.flujo_autenticacion WHERE id_tenant=@t AND id_usuario=@u;", ("@t", SqlDbType.BigInt, TenantId), ("@u", SqlDbType.BigInt, UserId));
         await Exec(connection, "DELETE FROM seguridad.excepcion_permiso_usuario WHERE id_tenant=@t AND id_usuario=@u;", ("@t", SqlDbType.BigInt, TenantId), ("@u", SqlDbType.BigInt, UserId));
         await Exec(connection, "DELETE FROM seguridad.permiso WHERE id_permiso=@p;", ("@p", SqlDbType.Int, PermissionId));
+        await Exec(connection, "DELETE FROM organizacion.unidad_organizativa WHERE id_tenant=@t;", ("@t", SqlDbType.BigInt, TenantId));
         await Exec(connection, "DELETE FROM seguridad.credencial_local_usuario WHERE id_usuario=@u;", ("@u", SqlDbType.BigInt, UserId));
         await Exec(connection, "DELETE FROM seguridad.usuario_empresa WHERE id_tenant=@t AND id_usuario=@u;", ("@t", SqlDbType.BigInt, TenantId), ("@u", SqlDbType.BigInt, UserId));
         await Exec(connection, "DELETE FROM seguridad.usuario_tenant WHERE id_tenant=@t AND id_usuario=@u;", ("@t", SqlDbType.BigInt, TenantId), ("@u", SqlDbType.BigInt, UserId));
         await Exec(connection, "DELETE FROM seguridad.usuario WHERE id_usuario=@u;", ("@u", SqlDbType.BigInt, UserId));
-        await Exec(connection, "DELETE FROM organizacion.empresa WHERE id_empresa=@e;", ("@e", SqlDbType.BigInt, CompanyId));
+        await Exec(connection, "DELETE FROM organizacion.empresa WHERE id_tenant=@t;", ("@t", SqlDbType.BigInt, TenantId));
         await Exec(connection, "DELETE FROM plataforma.tenant WHERE id_tenant=@t;", ("@t", SqlDbType.BigInt, TenantId));
     }
 

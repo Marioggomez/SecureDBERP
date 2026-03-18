@@ -1,7 +1,10 @@
 using Microsoft.Extensions.DependencyInjection;
 using SecureERP.Application.Abstractions.Context;
+using SecureERP.Domain.Modules.Organization;
 using SecureERP.Domain.Modules.Security;
+using SecureERP.Domain.Modules.Workflow;
 using SecureERP.Infrastructure.Auditing;
+using SecureERP.Infrastructure.Business;
 using SecureERP.Infrastructure.Logging;
 using SecureERP.Infrastructure.Persistence.Commands;
 using SecureERP.Infrastructure.Persistence.Db;
@@ -24,6 +27,9 @@ public static class DependencyInjection
 
         services.AddScoped<IStoredProcedureCommandExecutor, StoredProcedureCommandExecutor>();
         services.AddScoped<IStoredProcedureQueryExecutor, StoredProcedureQueryExecutor>();
+        services.AddScoped<BusinessPilotRepository>();
+        services.AddScoped<IOrganizationPilotRepository>(provider => provider.GetRequiredService<BusinessPilotRepository>());
+        services.AddScoped<IWorkflowPilotRepository>(provider => provider.GetRequiredService<BusinessPilotRepository>());
         services.AddScoped<IAuthRepository, AuthRepository>();
         services.AddScoped<IAuthorizationRepository, AuthorizationRepository>();
         services.AddSingleton<IPasswordHasher, PasswordHasher>();

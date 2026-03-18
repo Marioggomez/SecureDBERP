@@ -45,6 +45,25 @@ public sealed class SecurityContextMiddlewarePublicRoutesTests
         Assert.True(nextCalled);
     }
 
+    [Fact]
+    public async Task ProtectedWorkflowPath_WithoutBearer_ShouldReturnUnauthorized()
+    {
+        bool nextCalled = false;
+        SecurityContextMiddleware middleware = new(async _ => { nextCalled = true; await Task.CompletedTask; });
+        DefaultHttpContext context = new();
+        context.Request.Path = "/api/v1/workflow/approval-instances";
+        context.Response.Body = new MemoryStream();
+
+        await middleware.InvokeAsync(
+            context,
+            new RequestContextAccessor(),
+            new StubValidateSessionHandler(),
+            new StubAuthorizationEvaluator());
+
+        Assert.False(nextCalled);
+        Assert.Equal(StatusCodes.Status401Unauthorized, context.Response.StatusCode);
+    }
+
     private sealed class StubValidateSessionHandler : IValidateSessionHandler
     {
         public Task<ValidateSessionResult> HandleAsync(ValidateSessionRequest request, CancellationToken cancellationToken = default)
