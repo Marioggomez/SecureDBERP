@@ -31,7 +31,7 @@ Unificar respuesta de error, correlacion y logging estructurado sin redisenar el
    - niveles: `Information`, `Warning`, `Error`
 4. Manejo global de excepciones:
    - `DomainException` => `400` con mensaje seguro
-   - excepción no controlada => `500` con mensaje seguro
+   - excepcion no controlada => `500` con mensaje seguro
    - detalle tecnico solo en logs
 5. Politica de sesion expirada/invalida:
    - respuesta uniforme `401`
