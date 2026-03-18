@@ -10,20 +10,55 @@ public sealed class RequestMfaChallengeHandler : IRequestMfaChallengeHandler
     private readonly IAuthRepository _authRepository;
     private readonly IMfaCodeService _mfaCodeService;
     private readonly IRequestContextAccessor _requestContextAccessor;
+    private readonly IOperationalSecurityService _operationalSecurityService;
 
     public RequestMfaChallengeHandler(
         IAuthRepository authRepository,
         IMfaCodeService mfaCodeService,
-        IRequestContextAccessor requestContextAccessor)
+        IRequestContextAccessor requestContextAccessor,
+        IOperationalSecurityService operationalSecurityService)
     {
         _authRepository = authRepository;
         _mfaCodeService = mfaCodeService;
         _requestContextAccessor = requestContextAccessor;
+        _operationalSecurityService = operationalSecurityService;
     }
 
     public async Task<RequestMfaChallengeResponse> HandleAsync(RequestMfaChallengeRequest request, CancellationToken cancellationToken = default)
     {
         RequestContext context = _requestContextAccessor.Current;
+        string safeIp = string.IsNullOrWhiteSpace(request.IpAddress) ? "0.0.0.0" : request.IpAddress.Trim();
+        string principal = request.AuthFlowId?.ToString() ?? context.UserId?.ToString() ?? "ANON";
+        OperationalSecurityDecision guard = await _operationalSecurityService.GuardAsync(
+            "AUTH.MFA.CHALLENGE",
+            safeIp,
+            principal,
+            context.TenantId,
+            context.CompanyId,
+            cancellationToken);
+        if (!guard.IsAllowed)
+        {
+            string eventType = guard.Code.StartsWith("IP_", StringComparison.OrdinalIgnoreCase)
+                ? "IP_POLICY_DENY"
+                : "MFA_RATE_LIMIT_HIT";
+            await _authRepository.WriteSecurityEventAsync(
+                new SecurityEventToCreate(
+                    eventType,
+                    "WARNING",
+                    "DENIED",
+                    $"MFA challenge blocked by operational policy ({guard.Code}).",
+                    context.TenantId,
+                    context.CompanyId,
+                    context.UserId,
+                    context.SessionId,
+                    request.AuthFlowId,
+                    ParseCorrelationId(context.CorrelationId),
+                    safeIp,
+                    request.UserAgent),
+                cancellationToken);
+            return RequestMfaChallengeResponse.Failure("AUTH_REQUEST_REJECTED", "Operation rejected.");
+        }
+
         string otpCode = _mfaCodeService.GenerateCode();
         byte[] salt = _mfaCodeService.GenerateSalt(16);
         byte[] hash = _mfaCodeService.ComputeHash(otpCode, salt);

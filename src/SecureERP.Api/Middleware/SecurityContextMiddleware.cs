@@ -47,7 +47,7 @@ public sealed class SecurityContextMiddleware
         }
 
         ValidateSessionResult session = await validateSessionHandler.HandleAsync(
-            new ValidateSessionRequest(token),
+            new ValidateSessionRequest(token, 30, true, context.Connection.RemoteIpAddress?.ToString()),
             context.RequestAborted);
 
         if (!session.IsValid ||
@@ -110,7 +110,7 @@ public sealed class SecurityContextMiddleware
         }
 
         ValidateSessionResult session = await validateSessionHandler.HandleAsync(
-            new ValidateSessionRequest(token),
+            new ValidateSessionRequest(token, 30, true, context.Connection.RemoteIpAddress?.ToString()),
             context.RequestAborted);
 
         if (!session.IsValid ||

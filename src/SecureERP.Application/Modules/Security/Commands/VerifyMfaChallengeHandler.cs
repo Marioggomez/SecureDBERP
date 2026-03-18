@@ -11,19 +11,54 @@ public sealed class VerifyMfaChallengeHandler : IVerifyMfaChallengeHandler
     private readonly IAuthRepository _authRepository;
     private readonly IMfaCodeService _mfaCodeService;
     private readonly IRequestContextAccessor _requestContextAccessor;
+    private readonly IOperationalSecurityService _operationalSecurityService;
 
     public VerifyMfaChallengeHandler(
         IAuthRepository authRepository,
         IMfaCodeService mfaCodeService,
-        IRequestContextAccessor requestContextAccessor)
+        IRequestContextAccessor requestContextAccessor,
+        IOperationalSecurityService operationalSecurityService)
     {
         _authRepository = authRepository;
         _mfaCodeService = mfaCodeService;
         _requestContextAccessor = requestContextAccessor;
+        _operationalSecurityService = operationalSecurityService;
     }
 
     public async Task<VerifyMfaChallengeResponse> HandleAsync(VerifyMfaChallengeRequest request, CancellationToken cancellationToken = default)
     {
+        RequestContext current = _requestContextAccessor.Current;
+        string safeIp = string.IsNullOrWhiteSpace(request.IpAddress) ? "0.0.0.0" : request.IpAddress.Trim();
+        OperationalSecurityDecision guard = await _operationalSecurityService.GuardAsync(
+            "AUTH.MFA.VERIFY",
+            safeIp,
+            request.ChallengeId.ToString(),
+            current.TenantId,
+            current.CompanyId,
+            cancellationToken);
+        if (!guard.IsAllowed)
+        {
+            string eventType = guard.Code.StartsWith("IP_", StringComparison.OrdinalIgnoreCase)
+                ? "IP_POLICY_DENY"
+                : "MFA_RATE_LIMIT_HIT";
+            await _authRepository.WriteSecurityEventAsync(
+                new SecurityEventToCreate(
+                    eventType,
+                    "WARNING",
+                    "DENIED",
+                    $"MFA verify blocked by operational policy ({guard.Code}).",
+                    current.TenantId,
+                    current.CompanyId,
+                    current.UserId,
+                    current.SessionId,
+                    null,
+                    ParseCorrelationId(current.CorrelationId),
+                    safeIp,
+                    request.UserAgent),
+                cancellationToken);
+            return VerifyMfaChallengeResponse.Failure("AUTH_REQUEST_REJECTED", "Operation rejected.");
+        }
+
         if (string.IsNullOrWhiteSpace(request.OtpCode))
         {
             return VerifyMfaChallengeResponse.Failure("MFA_CODE_REQUIRED", "OTP code is required.");
@@ -67,8 +102,8 @@ public sealed class VerifyMfaChallengeHandler : IVerifyMfaChallengeHandler
                     challenge.SessionId,
                     challenge.AuthFlowId,
                     ParseCorrelationId(_requestContextAccessor.Current.CorrelationId),
-                    null,
-                    null),
+                    safeIp,
+                    request.UserAgent),
                 cancellationToken);
             return VerifyMfaChallengeResponse.Failure("MFA_CODE_INVALID", "Invalid MFA code.");
         }
@@ -110,8 +145,8 @@ public sealed class VerifyMfaChallengeHandler : IVerifyMfaChallengeHandler
                 challenge.SessionId,
                 challenge.AuthFlowId,
                 ParseCorrelationId(_requestContextAccessor.Current.CorrelationId),
-                null,
-                null),
+                safeIp,
+                request.UserAgent),
             cancellationToken);
 
         return VerifyMfaChallengeResponse.Success();

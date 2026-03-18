@@ -22,6 +22,7 @@ public static class DependencyInjection
         services.AddScoped<IRequestMfaChallengeHandler, RequestMfaChallengeHandler>();
         services.AddScoped<IVerifyMfaChallengeHandler, VerifyMfaChallengeHandler>();
         services.AddScoped<IAuthorizationEvaluator, AuthorizationEvaluator>();
+        services.AddScoped<IOperationalSecurityService, OperationalSecurityService>();
 
         services.AddScoped<IListOrganizationUnitsHandler, ListOrganizationUnitsHandler>();
         services.AddScoped<ICreateOrganizationUnitHandler, CreateOrganizationUnitHandler>();

@@ -32,7 +32,7 @@ public sealed class BusinessPilotPhase4IntegrationTests
         long profileId = await EnsureApprovalProfileAsync(scope.ConnectionString, scope.TenantId, scope.CompanyId);
         short stateId = await EnsureApprovalStateAsync(scope.ConnectionString);
 
-        CreateApprovalInstanceHandler createHandler = new(repository, scope.ContextAccessor);
+        CreateApprovalInstanceHandler createHandler = new(repository, scope.ContextAccessor, scope.CreateOperationalSecurityService(), scope.AuthRepository);
         await createHandler.HandleAsync(new CreateApprovalInstanceRequest(unitA, profileId, "WF.PILOT", 1001, 1, stateId, null, "A", "{\"pilot\":1}"));
         await createHandler.HandleAsync(new CreateApprovalInstanceRequest(unitB, profileId, "WF.PILOT", 1002, 1, stateId, null, "B", "{\"pilot\":2}"));
         await AddUserUnitScopeAsync(scope.ConnectionString, scope.TenantId, scope.CompanyId, scope.UserId, unitA);
@@ -58,7 +58,7 @@ public sealed class BusinessPilotPhase4IntegrationTests
         short stateId = await EnsureApprovalStateAsync(scope.ConnectionString);
         long ownUnit = await CreateOrganizationUnitAsync(repository, "U-OWN");
         await AddUserUnitScopeAsync(scope.ConnectionString, scope.TenantId, scope.CompanyId, scope.UserId, ownUnit);
-        CreateApprovalInstanceHandler createHandler = new(repository, scope.ContextAccessor);
+        CreateApprovalInstanceHandler createHandler = new(repository, scope.ContextAccessor, scope.CreateOperationalSecurityService(), scope.AuthRepository);
         await createHandler.HandleAsync(new CreateApprovalInstanceRequest(ownUnit, profileId, "WF.PILOT", 2001, 1, stateId, null, "OWN", "{\"pilot\":true}"));
 
         long otherCompanyId = await CreateCompanyInTenantAsync(scope.ConnectionString, scope.TenantId, "EMP_OTRA");

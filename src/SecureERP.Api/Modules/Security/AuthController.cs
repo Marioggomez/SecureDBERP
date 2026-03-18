@@ -132,7 +132,8 @@ public sealed class AuthController : ControllerBase
             new ValidateSessionRequest(
                 accessToken,
                 request.IdleTimeoutMinutes,
-                request.UpdateLastActivity),
+                request.UpdateLastActivity,
+                HttpContext.Connection.RemoteIpAddress?.ToString()),
             cancellationToken);
 
         ValidateSessionResponseContract response = new(
@@ -166,7 +167,9 @@ public sealed class AuthController : ControllerBase
                 request.AuthFlowId,
                 (MfaPurpose)request.Purpose,
                 (MfaChannel)request.Channel,
-                request.ActionCode),
+                request.ActionCode,
+                HttpContext.Connection.RemoteIpAddress?.ToString(),
+                Request.Headers.UserAgent.ToString()),
             cancellationToken);
 
         RequestMfaChallengeResponseContract response = new(
@@ -193,7 +196,11 @@ public sealed class AuthController : ControllerBase
         CancellationToken cancellationToken)
     {
         VerifyMfaChallengeResponse result = await _verifyMfaChallengeHandler.HandleAsync(
-            new VerifyMfaChallengeRequest(request.ChallengeId, request.OtpCode),
+            new VerifyMfaChallengeRequest(
+                request.ChallengeId,
+                request.OtpCode,
+                HttpContext.Connection.RemoteIpAddress?.ToString(),
+                Request.Headers.UserAgent.ToString()),
             cancellationToken);
 
         VerifyMfaChallengeResponseContract response = new(

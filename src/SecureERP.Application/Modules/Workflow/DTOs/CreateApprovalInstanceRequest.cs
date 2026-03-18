@@ -9,4 +9,5 @@ public sealed record CreateApprovalInstanceRequest(
     short ApprovalStateId,
     DateTime? UtcExpiresAt,
     string? Reason,
-    string Payload);
+    string Payload,
+    string? IpAddress = null);

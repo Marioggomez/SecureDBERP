@@ -61,7 +61,8 @@ public sealed class ApprovalInstancesController : ControllerBase
                 request.ApprovalStateId,
                 request.UtcExpiresAt,
                 request.Reason,
-                request.Payload),
+                request.Payload,
+                HttpContext.Connection.RemoteIpAddress?.ToString()),
             cancellationToken);
 
         CreateApprovalInstanceResponseContract response = new(

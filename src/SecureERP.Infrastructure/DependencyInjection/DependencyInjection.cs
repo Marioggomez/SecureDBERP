@@ -32,6 +32,7 @@ public static class DependencyInjection
         services.AddScoped<IWorkflowPilotRepository>(provider => provider.GetRequiredService<BusinessPilotRepository>());
         services.AddScoped<IAuthRepository, AuthRepository>();
         services.AddScoped<IAuthorizationRepository, AuthorizationRepository>();
+        services.AddScoped<IOperationalSecurityRepository, OperationalSecurityRepository>();
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddSingleton<ITokenGenerator, TokenGenerator>();
         services.AddSingleton<IMfaCodeService, MfaCodeService>();

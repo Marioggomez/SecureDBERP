@@ -6,4 +6,6 @@ public sealed record RequestMfaChallengeRequest(
     Guid? AuthFlowId,
     MfaPurpose Purpose,
     MfaChannel Channel,
-    string? ActionCode = null);
+    string? ActionCode = null,
+    string? IpAddress = null,
+    string? UserAgent = null);

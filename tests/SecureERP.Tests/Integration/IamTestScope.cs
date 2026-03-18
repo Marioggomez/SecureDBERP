@@ -60,12 +60,13 @@ internal sealed class IamTestScope : IAsyncDisposable
         return scope;
     }
 
-    public LoginHandler CreateLoginHandler() => new(AuthRepository, new PasswordHasher(), ContextAccessor);
-    public RequestMfaChallengeHandler CreateRequestMfaChallengeHandler() => new(AuthRepository, new DeterministicMfaCodeService(), ContextAccessor);
-    public VerifyMfaChallengeHandler CreateVerifyMfaChallengeHandler() => new(AuthRepository, new DeterministicMfaCodeService(), ContextAccessor);
+    public LoginHandler CreateLoginHandler() => new(AuthRepository, new PasswordHasher(), ContextAccessor, CreateOperationalSecurityService());
+    public RequestMfaChallengeHandler CreateRequestMfaChallengeHandler() => new(AuthRepository, new DeterministicMfaCodeService(), ContextAccessor, CreateOperationalSecurityService());
+    public VerifyMfaChallengeHandler CreateVerifyMfaChallengeHandler() => new(AuthRepository, new DeterministicMfaCodeService(), ContextAccessor, CreateOperationalSecurityService());
     public SelectCompanyHandler CreateSelectCompanyHandler() => new(AuthRepository, new TokenGenerator(), ContextAccessor);
-    public ValidateSessionHandler CreateValidateSessionHandler() => new(AuthRepository, new TokenGenerator());
+    public ValidateSessionHandler CreateValidateSessionHandler() => new(AuthRepository, new TokenGenerator(), CreateOperationalSecurityService());
     public AuthorizationEvaluator CreateAuthorizationEvaluator() => new(new AuthorizationRepository(ConnectionFactory, SessionContextApplier), ContextAccessor);
+    public OperationalSecurityService CreateOperationalSecurityService() => new(new OperationalSecurityRepository(ConnectionFactory));
 
     public async Task<(SelectCompanyResponse Select, ValidateSessionResult Session)> LoginAndSelectCompanyAsync(bool withMfa)
     {
@@ -134,6 +135,15 @@ internal sealed class IamTestScope : IAsyncDisposable
 
         await Exec(connection, "DELETE FROM observabilidad.auditoria_autorizacion WHERE id_tenant=@t AND id_usuario=@u;", ("@t", SqlDbType.BigInt, TenantId), ("@u", SqlDbType.BigInt, UserId));
         await Exec(connection, "DELETE FROM seguridad.security_event_audit WHERE id_tenant=@t AND id_usuario=@u;", ("@t", SqlDbType.BigInt, TenantId), ("@u", SqlDbType.BigInt, UserId));
+        await Exec(connection, "DELETE FROM seguridad.contador_rate_limit WHERE id_tenant=@t;", ("@t", SqlDbType.BigInt, TenantId));
+        await Exec(connection, "DELETE FROM seguridad.contador_rate_limit WHERE id_tenant IS NULL AND endpoint IN ('AUTH.LOGIN','AUTH.MFA.CHALLENGE','AUTH.MFA.VERIFY','AUTH.VALIDATE_SESSION','WORKFLOW.APPROVAL_INSTANCE.CREATE');");
+        await Exec(connection, "DELETE FROM seguridad.control_intentos_login WHERE login_usuario=@l;", ("@l", SqlDbType.VarChar, Login));
+        await Exec(connection, "DELETE FROM seguridad.ip_bloqueada WHERE ip LIKE '127.0.0.%';");
+        await Exec(connection, "UPDATE seguridad.politica_seguridad_operacional SET ventana_segundos=60,max_intentos=5,lockout_minutos=5,aplica_lockout=1,activo=1,actualizado_utc=SYSUTCDATETIME() WHERE codigo_accion='AUTH.LOGIN';");
+        await Exec(connection, "UPDATE seguridad.politica_seguridad_operacional SET ventana_segundos=60,max_intentos=6,lockout_minutos=NULL,aplica_lockout=0,activo=1,actualizado_utc=SYSUTCDATETIME() WHERE codigo_accion='AUTH.MFA.CHALLENGE';");
+        await Exec(connection, "UPDATE seguridad.politica_seguridad_operacional SET ventana_segundos=60,max_intentos=8,lockout_minutos=NULL,aplica_lockout=0,activo=1,actualizado_utc=SYSUTCDATETIME() WHERE codigo_accion='AUTH.MFA.VERIFY';");
+        await Exec(connection, "UPDATE seguridad.politica_seguridad_operacional SET ventana_segundos=60,max_intentos=20,lockout_minutos=NULL,aplica_lockout=0,activo=1,actualizado_utc=SYSUTCDATETIME() WHERE codigo_accion='AUTH.VALIDATE_SESSION';");
+        await Exec(connection, "UPDATE seguridad.politica_seguridad_operacional SET ventana_segundos=60,max_intentos=10,lockout_minutos=NULL,aplica_lockout=0,activo=1,actualizado_utc=SYSUTCDATETIME() WHERE codigo_accion='WORKFLOW.APPROVAL_INSTANCE.CREATE';");
         await Exec(connection, "DELETE FROM cumplimiento.accion_instancia_aprobacion WHERE id_tenant=@t;", ("@t", SqlDbType.BigInt, TenantId));
         await Exec(connection, "DELETE FROM cumplimiento.instancia_aprobacion WHERE id_tenant=@t;", ("@t", SqlDbType.BigInt, TenantId));
         await Exec(connection, "DELETE FROM cumplimiento.perfil_aprobacion WHERE id_tenant=@t;", ("@t", SqlDbType.BigInt, TenantId));

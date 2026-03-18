@@ -10,15 +10,18 @@ public sealed class LoginHandler : ILoginHandler
     private readonly IAuthRepository _authRepository;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IRequestContextAccessor _requestContextAccessor;
+    private readonly IOperationalSecurityService _operationalSecurityService;
 
     public LoginHandler(
         IAuthRepository authRepository,
         IPasswordHasher passwordHasher,
-        IRequestContextAccessor requestContextAccessor)
+        IRequestContextAccessor requestContextAccessor,
+        IOperationalSecurityService operationalSecurityService)
     {
         _authRepository = authRepository;
         _passwordHasher = passwordHasher;
         _requestContextAccessor = requestContextAccessor;
+        _operationalSecurityService = operationalSecurityService;
     }
 
     public async Task<LoginResponse> HandleAsync(LoginRequest request, CancellationToken cancellationToken = default)
@@ -27,12 +30,72 @@ public sealed class LoginHandler : ILoginHandler
             string.IsNullOrWhiteSpace(request.Identifier) ||
             string.IsNullOrWhiteSpace(request.Password))
         {
-            return LoginResponse.Failure("LOGIN_INVALID_REQUEST", "TenantCode, identifier and password are required.");
+            return LoginResponse.Failure("AUTH_REQUEST_REJECTED", "Authentication request rejected.");
+        }
+
+        string identifier = request.Identifier.Trim();
+        string tenantCode = request.TenantCode.Trim();
+        string safeIp = string.IsNullOrWhiteSpace(request.IpAddress) ? "0.0.0.0" : request.IpAddress.Trim();
+
+        OperationalSecurityDecision guard = await _operationalSecurityService.GuardAsync(
+            "AUTH.LOGIN",
+            safeIp,
+            $"{tenantCode}:{identifier}".ToUpperInvariant(),
+            null,
+            null,
+            cancellationToken);
+        if (!guard.IsAllowed)
+        {
+            string eventType = guard.Code.StartsWith("IP_", StringComparison.OrdinalIgnoreCase)
+                ? "IP_POLICY_DENY"
+                : "RATE_LIMIT_HIT";
+            await _authRepository.WriteSecurityEventAsync(
+                new SecurityEventToCreate(
+                    eventType,
+                    "WARNING",
+                    "DENIED",
+                    $"Login blocked by operational policy ({guard.Code}).",
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    ParseCorrelationId(_requestContextAccessor.Current.CorrelationId),
+                    safeIp,
+                    request.UserAgent),
+                cancellationToken);
+
+            return LoginResponse.Failure("AUTH_REQUEST_REJECTED", "Authentication request rejected.");
+        }
+
+        OperationalLockoutDecision lockout = await _operationalSecurityService.CheckLoginLockoutAsync(
+            identifier,
+            safeIp,
+            cancellationToken);
+        if (lockout.IsLocked)
+        {
+            await _authRepository.WriteSecurityEventAsync(
+                new SecurityEventToCreate(
+                    "LOGIN_LOCKOUT",
+                    "WARNING",
+                    "DENIED",
+                    "Login blocked due to lockout policy.",
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    ParseCorrelationId(_requestContextAccessor.Current.CorrelationId),
+                    safeIp,
+                    request.UserAgent),
+                cancellationToken);
+
+            return LoginResponse.Failure("AUTH_REQUEST_REJECTED", "Authentication request rejected.");
         }
 
         LoginUserCredential? user = await _authRepository.GetUserForLoginAsync(
-            request.TenantCode.Trim(),
-            request.Identifier.Trim(),
+            tenantCode,
+            identifier,
             cancellationToken);
 
         if (user is null)
@@ -53,7 +116,8 @@ public sealed class LoginHandler : ILoginHandler
                     request.UserAgent),
                 cancellationToken);
 
-            return LoginResponse.Failure("LOGIN_INVALID_CREDENTIALS", "Invalid credentials.");
+            await _operationalSecurityService.RegisterLoginFailureAsync(identifier, safeIp, cancellationToken);
+            return LoginResponse.Failure("AUTH_REQUEST_REJECTED", "Authentication request rejected.");
         }
 
         if (!user.IsActiveUser || !user.IsCredentialActive)
@@ -86,8 +150,30 @@ public sealed class LoginHandler : ILoginHandler
                     request.UserAgent),
                 cancellationToken);
 
-            return LoginResponse.Failure("LOGIN_INVALID_CREDENTIALS", "Invalid credentials.");
+            OperationalLockoutDecision failure = await _operationalSecurityService.RegisterLoginFailureAsync(identifier, safeIp, cancellationToken);
+            if (failure.IsLocked)
+            {
+                await _authRepository.WriteSecurityEventAsync(
+                    new SecurityEventToCreate(
+                        "LOGIN_LOCKOUT",
+                        "WARNING",
+                        "DENIED",
+                        "Login lockout activated due to failed attempts.",
+                        user.TenantId,
+                        null,
+                        user.UserId,
+                        null,
+                        null,
+                        ParseCorrelationId(_requestContextAccessor.Current.CorrelationId),
+                        safeIp,
+                        request.UserAgent),
+                    cancellationToken);
+            }
+
+            return LoginResponse.Failure("AUTH_REQUEST_REJECTED", "Authentication request rejected.");
         }
+
+        await _operationalSecurityService.RegisterLoginSuccessAsync(identifier, safeIp, cancellationToken);
 
         RequestContext currentContext = _requestContextAccessor.Current;
         _requestContextAccessor.SetCurrent(new RequestContext(
