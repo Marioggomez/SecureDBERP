@@ -27,10 +27,14 @@ public sealed class ValidateSessionHandler : IValidateSessionHandler
             return ValidateSessionResult.Failure("SESSION_TOKEN_REQUIRED", "Access token is required.");
         }
 
+        string normalizedToken = request.AccessToken.Trim();
+        byte[] tokenHash = _tokenGenerator.ComputeSha256(normalizedToken);
+        string principalKey = $"SESSION:{Convert.ToHexString(tokenHash.AsSpan(0, 16))}";
+
         OperationalSecurityDecision guard = await _operationalSecurityService.GuardAsync(
             "AUTH.VALIDATE_SESSION",
             request.IpAddress,
-            null,
+            principalKey,
             null,
             null,
             cancellationToken);
@@ -56,8 +60,6 @@ public sealed class ValidateSessionHandler : IValidateSessionHandler
                 cancellationToken);
             return ValidateSessionResult.Failure("AUTH_REQUEST_REJECTED", "Operation rejected.");
         }
-
-        byte[] tokenHash = _tokenGenerator.ComputeSha256(request.AccessToken.Trim());
 
         SessionValidationSnapshot? session = await _authRepository.ValidateSessionByTokenHashAsync(
             tokenHash,

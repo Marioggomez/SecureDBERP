@@ -80,7 +80,7 @@ public sealed class OperationalSecurityPhase5aIntegrationTests
     public async Task ValidateSession_ShouldRespectRateLimit()
     {
         await using IamTestScope scope = await IamTestScope.CreateAsync();
-        await UpsertPolicyAsync(scope.ConnectionString, "AUTH.VALIDATE_SESSION", 120, 1, null, false);
+        await UpsertPolicyAsync(scope.ConnectionString, "AUTH.VALIDATE_SESSION", 120, 2, null, false);
         await CleanupRateLimitAsync(scope.ConnectionString, "AUTH.VALIDATE_SESSION");
 
         (SelectCompanyResponse select, _) = await scope.LoginAndSelectCompanyAsync(withMfa: true);
