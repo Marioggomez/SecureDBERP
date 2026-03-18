@@ -1,4 +1,5 @@
 using SecureERP.Api.Modules.Security;
+using SecureERP.Api.Common;
 using SecureERP.Application.Abstractions.Context;
 using SecureERP.Application.Modules.Security.Abstractions;
 using SecureERP.Application.Modules.Security.DTOs;
@@ -11,6 +12,8 @@ public sealed class SecurityContextMiddleware
     [
         "/",
         "/health",
+        "/health/ready",
+        "/health/live",
         "/api/v1/auth/login",
         "/api/v1/auth/mfa/challenge",
         "/api/v1/auth/mfa/verify",
@@ -18,10 +21,12 @@ public sealed class SecurityContextMiddleware
     ];
 
     private readonly RequestDelegate _next;
+    private readonly ILogger<SecurityContextMiddleware> _logger;
 
-    public SecurityContextMiddleware(RequestDelegate next)
+    public SecurityContextMiddleware(RequestDelegate next, ILogger<SecurityContextMiddleware> logger)
     {
         _next = next;
+        _logger = logger;
     }
 
     public async Task InvokeAsync(
@@ -41,8 +46,7 @@ public sealed class SecurityContextMiddleware
         string? token = ExtractBearerToken(context.Request.Headers.Authorization);
         if (string.IsNullOrWhiteSpace(token))
         {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            await context.Response.WriteAsJsonAsync(new { code = "SESSION_TOKEN_MISSING" });
+            await WriteUnauthorizedAsync(context, requestContextAccessor, "SESSION_INVALID", "Session is invalid or expired.");
             return;
         }
 
@@ -56,8 +60,10 @@ public sealed class SecurityContextMiddleware
             session.CompanyId is null ||
             session.SessionId is null)
         {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            await context.Response.WriteAsJsonAsync(new { code = session.ErrorCode ?? "SESSION_INVALID" });
+            string sessionCode = session.ErrorCode is "SESSION_EXPIRED" or "SESSION_INVALID"
+                ? session.ErrorCode
+                : "SESSION_INVALID";
+            await WriteUnauthorizedAsync(context, requestContextAccessor, sessionCode, "Session is invalid or expired.");
             return;
         }
 
@@ -85,12 +91,22 @@ public sealed class SecurityContextMiddleware
 
             if (!decision.IsAllowed)
             {
-                context.Response.StatusCode = StatusCodes.Status403Forbidden;
-                await context.Response.WriteAsJsonAsync(new
+                RequestContext scoped = requestContextAccessor.Current;
+                using IDisposable? scope = _logger.BeginScope(new Dictionary<string, object?>
                 {
-                    code = "AUTHZ_DENIED",
-                    reason = decision.ReasonCode
+                    ["correlationId"] = context.TraceIdentifier,
+                    ["userId"] = scoped.UserId,
+                    ["tenantId"] = scoped.TenantId,
+                    ["endpoint"] = path,
+                    ["errorCode"] = "AUTHZ_DENIED"
                 });
+                _logger.LogWarning("Authorization denied with reason {ReasonCode}", decision.ReasonCode);
+
+                await ApiErrorWriter.WriteAsync(
+                    context,
+                    StatusCodes.Status403Forbidden,
+                    "AUTHZ_DENIED",
+                    "Operation is not authorized.");
                 return;
             }
         }
@@ -154,5 +170,30 @@ public sealed class SecurityContextMiddleware
         }
 
         return authorizationHeader[prefix.Length..].Trim();
+    }
+
+    private async Task WriteUnauthorizedAsync(
+        HttpContext context,
+        IRequestContextAccessor requestContextAccessor,
+        string errorCode,
+        string message)
+    {
+        RequestContext scoped = requestContextAccessor.Current;
+        using IDisposable? scope = _logger.BeginScope(new Dictionary<string, object?>
+        {
+            ["correlationId"] = context.TraceIdentifier,
+            ["userId"] = scoped.UserId,
+            ["tenantId"] = scoped.TenantId,
+            ["endpoint"] = context.Request.Path.Value,
+            ["errorCode"] = errorCode
+        });
+        _logger.LogWarning("Security context request denied");
+
+        await ApiErrorWriter.WriteAsync(
+            context,
+            StatusCodes.Status401Unauthorized,
+            errorCode,
+            message,
+            context.RequestAborted);
     }
 }

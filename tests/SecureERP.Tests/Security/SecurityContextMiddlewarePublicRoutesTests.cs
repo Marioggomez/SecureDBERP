@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging.Abstractions;
 using SecureERP.Api.Middleware;
 using SecureERP.Application.Modules.Security.Abstractions;
 using SecureERP.Application.Modules.Security.DTOs;
@@ -12,7 +13,9 @@ public sealed class SecurityContextMiddlewarePublicRoutesTests
     public async Task ValidateSessionPath_WithoutBearer_ShouldReturnUnauthorized()
     {
         bool nextCalled = false;
-        SecurityContextMiddleware middleware = new(async _ => { nextCalled = true; await Task.CompletedTask; });
+        SecurityContextMiddleware middleware = new(
+            async _ => { nextCalled = true; await Task.CompletedTask; },
+            NullLogger<SecurityContextMiddleware>.Instance);
         DefaultHttpContext context = new();
         context.Request.Path = "/api/v1/auth/validate-session";
         context.Response.Body = new MemoryStream();
@@ -31,7 +34,9 @@ public sealed class SecurityContextMiddlewarePublicRoutesTests
     public async Task MfaChallengePath_WithoutBearer_ShouldRemainPublic()
     {
         bool nextCalled = false;
-        SecurityContextMiddleware middleware = new(async _ => { nextCalled = true; await Task.CompletedTask; });
+        SecurityContextMiddleware middleware = new(
+            async _ => { nextCalled = true; await Task.CompletedTask; },
+            NullLogger<SecurityContextMiddleware>.Instance);
         DefaultHttpContext context = new();
         context.Request.Path = "/api/v1/auth/mfa/challenge";
         context.Response.Body = new MemoryStream();
@@ -49,7 +54,9 @@ public sealed class SecurityContextMiddlewarePublicRoutesTests
     public async Task ProtectedWorkflowPath_WithoutBearer_ShouldReturnUnauthorized()
     {
         bool nextCalled = false;
-        SecurityContextMiddleware middleware = new(async _ => { nextCalled = true; await Task.CompletedTask; });
+        SecurityContextMiddleware middleware = new(
+            async _ => { nextCalled = true; await Task.CompletedTask; },
+            NullLogger<SecurityContextMiddleware>.Instance);
         DefaultHttpContext context = new();
         context.Request.Path = "/api/v1/workflow/approval-instances";
         context.Response.Body = new MemoryStream();

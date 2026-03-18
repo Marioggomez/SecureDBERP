@@ -1,4 +1,5 @@
 using SecureERP.Api.Common;
+using SecureERP.Application.Abstractions.Context;
 using SecureERP.Domain.Exceptions;
 
 namespace SecureERP.Api.Middleware;
@@ -7,11 +8,16 @@ public sealed class ExceptionHandlingMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<ExceptionHandlingMiddleware> _logger;
+    private readonly IRequestContextAccessor _requestContextAccessor;
 
-    public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
+    public ExceptionHandlingMiddleware(
+        RequestDelegate next,
+        ILogger<ExceptionHandlingMiddleware> logger,
+        IRequestContextAccessor requestContextAccessor)
     {
         _next = next;
         _logger = logger;
+        _requestContextAccessor = requestContextAccessor;
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -22,31 +28,42 @@ public sealed class ExceptionHandlingMiddleware
         }
         catch (DomainException ex)
         {
-            _logger.LogWarning(ex, "Domain error: {Code}", ex.Code);
-            await WriteProblemAsync(context, StatusCodes.Status400BadRequest, ex.Code, ex.Message);
+            LogException(ex, context, ex.Code, LogLevel.Warning);
+            await ApiErrorWriter.WriteAsync(
+                context,
+                StatusCodes.Status400BadRequest,
+                ex.Code,
+                "Request could not be processed.");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unhandled error");
-            await WriteProblemAsync(context, StatusCodes.Status500InternalServerError, "UNHANDLED_ERROR", "An unexpected error occurred.");
+            LogException(ex, context, "UNHANDLED_ERROR", LogLevel.Error);
+            await ApiErrorWriter.WriteAsync(
+                context,
+                StatusCodes.Status500InternalServerError,
+                "UNHANDLED_ERROR",
+                "An unexpected error occurred.");
         }
     }
 
-    private static async Task WriteProblemAsync(HttpContext context, int status, string code, string detail)
+    private void LogException(Exception ex, HttpContext context, string errorCode, LogLevel level)
     {
-        string correlationId = context.TraceIdentifier;
-        context.Response.StatusCode = status;
-        context.Response.ContentType = "application/problem+json";
-
-        await context.Response.WriteAsJsonAsync(new
+        var requestContext = _requestContextAccessor.Current;
+        using IDisposable? scope = _logger.BeginScope(new Dictionary<string, object?>
         {
-            type = "about:blank",
-            title = "Request failed",
-            status,
-            code,
-            detail,
-            correlationId,
-            traceIdHeader = ApiConstants.CorrelationIdHeader
+            ["correlationId"] = context.TraceIdentifier,
+            ["userId"] = requestContext.UserId,
+            ["tenantId"] = requestContext.TenantId,
+            ["endpoint"] = context.Request.Path.Value,
+            ["errorCode"] = errorCode
         });
+
+        if (level == LogLevel.Warning)
+        {
+            _logger.LogWarning(ex, "Handled domain exception");
+            return;
+        }
+
+        _logger.LogError(ex, "Unhandled exception");
     }
 }

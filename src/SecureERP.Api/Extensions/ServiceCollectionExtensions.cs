@@ -1,4 +1,5 @@
 using SecureERP.Application.DependencyInjection;
+using SecureERP.Api.Health;
 using SecureERP.Infrastructure.DependencyInjection;
 
 namespace SecureERP.Api.Extensions;
@@ -15,7 +16,9 @@ public static class ServiceCollectionExtensions
 
         services.AddHttpContextAccessor();
         services.AddControllers();
-        services.AddHealthChecks();
+        services.AddHealthChecks()
+            .AddCheck("live", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy(), tags: ["live"])
+            .AddCheck<SqlServerReadyHealthCheck>("sqlserver", tags: ["ready"]);
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
 
