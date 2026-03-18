@@ -17,7 +17,7 @@ public sealed class DatabaseIamPhase3IntegrationTests
             INNER JOIN sys.security_predicates pr ON p.object_id = pr.object_id
             WHERE p.name = 'RLS_scope_tenant_empresa'
               AND pr.target_object_id = OBJECT_ID(N'seguridad.security_event_audit')
-              AND pr.predicate_type = 0
+              AND pr.predicate_type_desc = N'FILTER'
               AND pr.predicate_definition LIKE N'%fn_rls_tenant_empresa%';
             """;
 

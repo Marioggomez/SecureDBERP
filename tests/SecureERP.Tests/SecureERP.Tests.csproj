@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\SecureERP.Api\SecureERP.Api.csproj" />
     <ProjectReference Include="..\..\src\SecureERP.Application\SecureERP.Application.csproj" />
     <ProjectReference Include="..\..\src\SecureERP.Domain\SecureERP.Domain.csproj" />
     <ProjectReference Include="..\..\src\SecureERP.Infrastructure\SecureERP.Infrastructure.csproj" />

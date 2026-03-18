@@ -29,6 +29,7 @@ internal sealed class IamTestScope : IAsyncDisposable
     public long UserId { get; private set; }
     public int PermissionId { get; private set; }
     public short AllowEffectId { get; private set; }
+    public short DenyEffectId { get; private set; }
     public short ScopeCompanyId { get; private set; }
     public string TenantCode { get; private set; } = string.Empty;
     public string Login { get; private set; } = string.Empty;
@@ -155,6 +156,7 @@ internal sealed class IamTestScope : IAsyncDisposable
         await Exec(connection, "IF NOT EXISTS (SELECT 1 FROM catalogo.estado_empresa WHERE id_estado_empresa=1) BEGIN SET IDENTITY_INSERT catalogo.estado_empresa ON; INSERT INTO catalogo.estado_empresa(id_estado_empresa,codigo,nombre,descripcion,orden_visual,activo,creado_utc,actualizado_utc) VALUES (1,'ACTIVA',N'Activa',N'Activa',1,1,SYSUTCDATETIME(),NULL); SET IDENTITY_INSERT catalogo.estado_empresa OFF; END;");
         await Exec(connection, "IF NOT EXISTS (SELECT 1 FROM catalogo.tipo_empresa WHERE id_tipo_empresa=1) BEGIN SET IDENTITY_INSERT catalogo.tipo_empresa ON; INSERT INTO catalogo.tipo_empresa(id_tipo_empresa,codigo,nombre,descripcion,orden_visual,activo,creado_utc,actualizado_utc) VALUES (1,'GENERAL',N'General',N'General',1,1,SYSUTCDATETIME(),NULL); SET IDENTITY_INSERT catalogo.tipo_empresa OFF; END;");
         await Exec(connection, "IF NOT EXISTS (SELECT 1 FROM catalogo.efecto_permiso WHERE codigo='ALLOW') BEGIN SET IDENTITY_INSERT catalogo.efecto_permiso ON; INSERT INTO catalogo.efecto_permiso(id_efecto_permiso,codigo,nombre,descripcion,orden_visual,activo,creado_utc,actualizado_utc) VALUES (1,'ALLOW',N'Allow',N'Allow',1,1,SYSUTCDATETIME(),NULL); SET IDENTITY_INSERT catalogo.efecto_permiso OFF; END;");
+        await Exec(connection, "IF NOT EXISTS (SELECT 1 FROM catalogo.efecto_permiso WHERE codigo='DENY') INSERT INTO catalogo.efecto_permiso(codigo,nombre,descripcion,orden_visual,activo,creado_utc,actualizado_utc) VALUES ('DENY',N'Deny',N'Deny',2,1,SYSUTCDATETIME(),NULL);");
         await Exec(connection, "IF NOT EXISTS (SELECT 1 FROM catalogo.alcance_asignacion WHERE codigo='EMPRESA') BEGIN SET IDENTITY_INSERT catalogo.alcance_asignacion ON; INSERT INTO catalogo.alcance_asignacion(id_alcance_asignacion,codigo,nombre,descripcion,orden_visual,activo,creado_utc,actualizado_utc) VALUES (1,'EMPRESA',N'Empresa',N'Empresa',1,1,SYSUTCDATETIME(),NULL); SET IDENTITY_INSERT catalogo.alcance_asignacion OFF; END;");
         await Exec(connection, "IF NOT EXISTS (SELECT 1 FROM catalogo.proposito_desafio_mfa WHERE codigo='LOGIN') BEGIN SET IDENTITY_INSERT catalogo.proposito_desafio_mfa ON; INSERT INTO catalogo.proposito_desafio_mfa(id_proposito_desafio_mfa,codigo,nombre,descripcion,orden_visual,activo,creado_utc,actualizado_utc) VALUES (1,'LOGIN',N'Login',N'Login',1,1,SYSUTCDATETIME(),NULL); SET IDENTITY_INSERT catalogo.proposito_desafio_mfa OFF; END;");
         await Exec(connection, "IF NOT EXISTS (SELECT 1 FROM catalogo.proposito_desafio_mfa WHERE codigo='STEP_UP') INSERT INTO catalogo.proposito_desafio_mfa(codigo,nombre,descripcion,orden_visual,activo,creado_utc,actualizado_utc) VALUES ('STEP_UP',N'StepUp',N'StepUp',2,1,SYSUTCDATETIME(),NULL);");
@@ -162,12 +164,13 @@ internal sealed class IamTestScope : IAsyncDisposable
 
         await using (SqlCommand ids = connection.CreateCommand())
         {
-            ids.CommandText = "SELECT CAST((SELECT TOP 1 id_efecto_permiso FROM catalogo.efecto_permiso WHERE codigo='ALLOW') AS SMALLINT), CAST((SELECT TOP 1 id_alcance_asignacion FROM catalogo.alcance_asignacion WHERE codigo='EMPRESA') AS SMALLINT);";
+            ids.CommandText = "SELECT CAST((SELECT TOP 1 id_efecto_permiso FROM catalogo.efecto_permiso WHERE codigo='ALLOW') AS SMALLINT), CAST((SELECT TOP 1 id_efecto_permiso FROM catalogo.efecto_permiso WHERE codigo='DENY') AS SMALLINT), CAST((SELECT TOP 1 id_alcance_asignacion FROM catalogo.alcance_asignacion WHERE codigo='EMPRESA') AS SMALLINT);";
             await using SqlDataReader reader = await ids.ExecuteReaderAsync();
             if (await reader.ReadAsync())
             {
                 AllowEffectId = reader.GetInt16(0);
-                ScopeCompanyId = reader.GetInt16(1);
+                DenyEffectId = reader.GetInt16(1);
+                ScopeCompanyId = reader.GetInt16(2);
             }
         }
     }
@@ -231,6 +234,22 @@ internal sealed class IamTestScope : IAsyncDisposable
         }
 
         await Exec(connection, "INSERT INTO seguridad.excepcion_permiso_usuario(id_usuario,id_tenant,id_permiso,id_efecto_permiso,id_alcance_asignacion,id_grupo_empresarial,id_empresa,id_unidad_organizativa,fecha_inicio_utc,fecha_fin_utc,concedido_por,motivo,activo,creado_utc,actualizado_utc) VALUES (@u,@t,@p,@ef,@alc,NULL,@e,NULL,DATEADD(MINUTE,-5,SYSUTCDATETIME()),NULL,NULL,N'Integration allow',1,SYSUTCDATETIME(),NULL);", ("@u", SqlDbType.BigInt, UserId), ("@t", SqlDbType.BigInt, TenantId), ("@p", SqlDbType.Int, PermissionId), ("@ef", SqlDbType.SmallInt, AllowEffectId), ("@alc", SqlDbType.SmallInt, ScopeCompanyId), ("@e", SqlDbType.BigInt, CompanyId));
+    }
+
+    public async Task AddExplicitDenyForPermissionAsync()
+    {
+        await using SqlConnection connection = new(ConnectionString);
+        await connection.OpenAsync();
+        await ApplyTenantCompanyContextAsync(connection);
+        await Exec(connection, "INSERT INTO seguridad.excepcion_permiso_usuario(id_usuario,id_tenant,id_permiso,id_efecto_permiso,id_alcance_asignacion,id_grupo_empresarial,id_empresa,id_unidad_organizativa,fecha_inicio_utc,fecha_fin_utc,concedido_por,motivo,activo,creado_utc,actualizado_utc) VALUES (@u,@t,@p,@ef,@alc,NULL,@e,NULL,DATEADD(MINUTE,-5,SYSUTCDATETIME()),NULL,NULL,N'Integration deny',1,SYSUTCDATETIME(),NULL);", ("@u", SqlDbType.BigInt, UserId), ("@t", SqlDbType.BigInt, TenantId), ("@p", SqlDbType.Int, PermissionId), ("@ef", SqlDbType.SmallInt, DenyEffectId), ("@alc", SqlDbType.SmallInt, ScopeCompanyId), ("@e", SqlDbType.BigInt, CompanyId));
+    }
+
+    public async Task RemovePermissionExceptionsAsync()
+    {
+        await using SqlConnection connection = new(ConnectionString);
+        await connection.OpenAsync();
+        await ApplyTenantCompanyContextAsync(connection);
+        await Exec(connection, "DELETE FROM seguridad.excepcion_permiso_usuario WHERE id_tenant=@t AND id_usuario=@u AND id_permiso=@p;", ("@t", SqlDbType.BigInt, TenantId), ("@u", SqlDbType.BigInt, UserId), ("@p", SqlDbType.Int, PermissionId));
     }
 
     private static async Task Exec(SqlConnection connection, string sql, params (string Name, SqlDbType Type, object Value)[] parameters)

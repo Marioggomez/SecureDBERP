@@ -68,6 +68,36 @@ public sealed class IamPhase31EndToEndIntegrationTests
     }
 
     [Fact]
+    public async Task Authorization_ExplicitDeny_ShouldWinOverAllow()
+    {
+        await using IamTestScope scope = await IamTestScope.CreateAsync();
+        (_, ValidateSessionResult session) = await scope.LoginAndSelectCompanyAsync(withMfa: true);
+        await scope.AddExplicitDenyForPermissionAsync();
+        scope.ContextAccessor.SetCurrent(new RequestContext(session.TenantId, session.CompanyId, session.UserId, session.SessionId, Guid.NewGuid().ToString()));
+
+        AuthorizationCheckResult result = await scope.CreateAuthorizationEvaluator().EvaluateAsync(
+            new AuthorizationCheckRequest(scope.PermissionCode, false, "/api/v1/test/deny-over-allow", "POST", "127.0.0.1", "SecureERP.Tests", Guid.NewGuid().ToString()));
+
+        Assert.False(result.IsAllowed);
+        Assert.Equal("DENY_EXPLICIT", result.ReasonCode);
+    }
+
+    [Fact]
+    public async Task Authorization_DefaultDeny_ShouldApply_WhenNoEffectivePermission()
+    {
+        await using IamTestScope scope = await IamTestScope.CreateAsync();
+        await scope.RemovePermissionExceptionsAsync();
+        (_, ValidateSessionResult session) = await scope.LoginAndSelectCompanyAsync(withMfa: true);
+        scope.ContextAccessor.SetCurrent(new RequestContext(session.TenantId, session.CompanyId, session.UserId, session.SessionId, Guid.NewGuid().ToString()));
+
+        AuthorizationCheckResult result = await scope.CreateAuthorizationEvaluator().EvaluateAsync(
+            new AuthorizationCheckRequest(scope.PermissionCode, false, "/api/v1/test/default-deny", "GET", "127.0.0.1", "SecureERP.Tests", Guid.NewGuid().ToString()));
+
+        Assert.False(result.IsAllowed);
+        Assert.Equal("DENY_DEFAULT", result.ReasonCode);
+    }
+
+    [Fact]
     public async Task Authorization_ShouldDeny_WhenMfaRequiredAndSessionNotValidated()
     {
         await using IamTestScope scope = await IamTestScope.CreateAsync();
@@ -120,8 +150,30 @@ public sealed class IamPhase31EndToEndIntegrationTests
         await using SqlConnection connection = new(cs);
         await connection.OpenAsync();
         await using SqlCommand command = connection.CreateCommand();
-        command.CommandText = "SELECT COUNT(1) FROM sys.security_policies p INNER JOIN sys.security_predicates pr ON p.object_id = pr.object_id WHERE p.name='RLS_scope_tenant_empresa' AND pr.target_object_id=OBJECT_ID(N'seguridad.security_event_audit') AND pr.predicate_type=0;";
+        command.CommandText = "SELECT COUNT(1) FROM sys.security_policies p INNER JOIN sys.security_predicates pr ON p.object_id = pr.object_id WHERE p.name='RLS_scope_tenant_empresa' AND pr.target_object_id=OBJECT_ID(N'seguridad.security_event_audit') AND pr.predicate_type_desc='FILTER';";
         int count = Convert.ToInt32(await command.ExecuteScalarAsync());
         Assert.True(count > 0);
+    }
+
+    [Fact]
+    public async Task RlsPolicy_ShouldExcludeIamCoreSessionAndMfaChallengeTables()
+    {
+        string cs = IamTestScope.ResolveConnectionString() ?? throw new InvalidOperationException("Connection string not configured.");
+        await using SqlConnection connection = new(cs);
+        await connection.OpenAsync();
+        await using SqlCommand command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT
+                COALESCE(SUM(CASE WHEN pr.target_object_id = OBJECT_ID(N'seguridad.sesion_usuario') THEN 1 ELSE 0 END), 0) AS session_predicates,
+                COALESCE(SUM(CASE WHEN pr.target_object_id = OBJECT_ID(N'seguridad.desafio_mfa') THEN 1 ELSE 0 END), 0) AS challenge_predicates
+            FROM sys.security_policies p
+            INNER JOIN sys.security_predicates pr ON p.object_id = pr.object_id
+            WHERE p.name = 'RLS_scope_tenant_empresa'
+              AND pr.predicate_type_desc = 'FILTER';
+            """;
+        await using SqlDataReader reader = await command.ExecuteReaderAsync();
+        Assert.True(await reader.ReadAsync());
+        Assert.Equal(0, reader.GetInt32(reader.GetOrdinal("session_predicates")));
+        Assert.Equal(0, reader.GetInt32(reader.GetOrdinal("challenge_predicates")));
     }
 }

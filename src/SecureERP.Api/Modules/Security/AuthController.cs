@@ -113,9 +113,24 @@ public sealed class AuthController : ControllerBase
         [FromBody] ValidateSessionRequestContract request,
         CancellationToken cancellationToken)
     {
+        string? accessToken = ExtractBearerToken(Request.Headers.Authorization);
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            return Unauthorized(new ValidateSessionResponseContract(
+                false,
+                null,
+                null,
+                null,
+                null,
+                false,
+                null,
+                "SESSION_TOKEN_MISSING",
+                "Authorization bearer token is required."));
+        }
+
         ValidateSessionResult result = await _validateSessionHandler.HandleAsync(
             new ValidateSessionRequest(
-                request.AccessToken,
+                accessToken,
                 request.IdleTimeoutMinutes,
                 request.UpdateLastActivity),
             cancellationToken);
@@ -192,5 +207,21 @@ public sealed class AuthController : ControllerBase
         }
 
         return Ok(response);
+    }
+
+    private static string? ExtractBearerToken(string? authorizationHeader)
+    {
+        if (string.IsNullOrWhiteSpace(authorizationHeader))
+        {
+            return null;
+        }
+
+        const string prefix = "Bearer ";
+        if (!authorizationHeader.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        return authorizationHeader[prefix.Length..].Trim();
     }
 }

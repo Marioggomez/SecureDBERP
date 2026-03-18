@@ -13,6 +13,29 @@ AS
 BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
+    DECLARE @utc DATETIME2(7) = SYSUTCDATETIME();
+
+    IF EXISTS
+    (
+        SELECT 1
+        FROM seguridad.excepcion_permiso_usuario e
+        INNER JOIN seguridad.permiso p ON p.id_permiso = e.id_permiso
+        LEFT JOIN catalogo.efecto_permiso ef ON ef.id_efecto_permiso = e.id_efecto_permiso
+        WHERE e.id_usuario = @id_usuario
+          AND e.id_tenant = @id_tenant
+          AND p.codigo = @codigo_permiso
+          AND e.activo = 1
+          AND (e.fecha_inicio_utc IS NULL OR e.fecha_inicio_utc <= @utc)
+          AND (e.fecha_fin_utc IS NULL OR e.fecha_fin_utc >= @utc)
+          AND (e.id_empresa IS NULL OR e.id_empresa = @id_empresa)
+          AND UPPER(COALESCE(ef.codigo, N'')) = N'DENY'
+    )
+    BEGIN
+        SELECT CAST(0 AS BIT) AS autorizado,
+               N'DENY_EXPLICIT' AS reason_code,
+               N'EXCEPTION' AS resolution_source;
+        RETURN;
+    END;
 
     IF NOT EXISTS (
         SELECT 1
@@ -45,6 +68,28 @@ BEGIN
                    N'SESSION' AS resolution_source;
             RETURN;
         END;
+    END;
+
+    IF EXISTS
+    (
+        SELECT 1
+        FROM seguridad.excepcion_permiso_usuario e
+        INNER JOIN seguridad.permiso p ON p.id_permiso = e.id_permiso
+        LEFT JOIN catalogo.efecto_permiso ef ON ef.id_efecto_permiso = e.id_efecto_permiso
+        WHERE e.id_usuario = @id_usuario
+          AND e.id_tenant = @id_tenant
+          AND p.codigo = @codigo_permiso
+          AND e.activo = 1
+          AND (e.fecha_inicio_utc IS NULL OR e.fecha_inicio_utc <= @utc)
+          AND (e.fecha_fin_utc IS NULL OR e.fecha_fin_utc >= @utc)
+          AND (e.id_empresa IS NULL OR e.id_empresa = @id_empresa)
+          AND UPPER(COALESCE(ef.codigo, N'')) = N'ALLOW'
+    )
+    BEGIN
+        SELECT CAST(1 AS BIT) AS autorizado,
+               N'ALLOW_EXPLICIT' AS reason_code,
+               N'EXCEPTION' AS resolution_source;
+        RETURN;
     END;
 
     IF EXISTS (

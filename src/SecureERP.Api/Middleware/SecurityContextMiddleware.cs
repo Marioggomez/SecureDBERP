@@ -14,8 +14,7 @@ public sealed class SecurityContextMiddleware
         "/api/v1/auth/login",
         "/api/v1/auth/mfa/challenge",
         "/api/v1/auth/mfa/verify",
-        "/api/v1/auth/select-company",
-        "/api/v1/auth/validate-session"
+        "/api/v1/auth/select-company"
     ];
 
     private readonly RequestDelegate _next;
