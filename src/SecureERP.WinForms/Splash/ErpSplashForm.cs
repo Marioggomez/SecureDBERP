@@ -1,4 +1,4 @@
-﻿using DevExpress.XtraEditors;
+using DevExpress.XtraEditors;
 using DevExpress.XtraWaitForm;
 
 namespace SecureERP.WinForms.Splash;

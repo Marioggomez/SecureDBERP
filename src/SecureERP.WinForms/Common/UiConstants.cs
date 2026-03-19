@@ -1,4 +1,4 @@
-﻿namespace SecureERP.WinForms.Common;
+namespace SecureERP.WinForms.Common;
 
 public static class UiConstants
 {

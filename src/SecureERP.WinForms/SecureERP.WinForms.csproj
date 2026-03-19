@@ -13,6 +13,7 @@
   <ItemGroup>
     <PackageReference Include="DevExpress.Win" />
     <PackageReference Include="DevExpress.Data" />
+    <PackageReference Include="DevExpress.Win.Design" />
   </ItemGroup>
 </Project>
 

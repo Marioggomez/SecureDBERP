@@ -6,6 +6,7 @@
   <ItemGroup>
     <PackageVersion Include="DevExpress.Data" Version="25.2.3" />
     <PackageVersion Include="DevExpress.Win" Version="25.2.3" />
+    <PackageVersion Include="DevExpress.Win.Design" Version="25.2.3" />
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="8.0.24" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     <PackageVersion Include="Microsoft.Data.SqlClient" Version="5.2.2" />
@@ -19,4 +20,3 @@
     <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.3" />
   </ItemGroup>
 </Project>
-
