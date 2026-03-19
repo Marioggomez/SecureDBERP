@@ -30,4 +30,8 @@ Thumbs.db
 ## Local settings
 appsettings.Local.json
 database.config.json
+database.config.local.json
+.env
+.env.*
+src/SecureERP.Api/appsettings.*.Local.json
 

@@ -1,0 +1,45 @@
+name: integration-sql
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  integration-sql:
+    if: ${{ secrets.SECUREERP_SQL_CONNECTION_STRING != '' }}
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK (global.json)
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore SecureERP.sln
+
+      - name: Build
+        run: dotnet build SecureERP.sln --configuration Release --no-restore
+
+      - name: Integration + E2E IAM (SQL required)
+        env:
+          SECUREERP_SQL_CONNECTION_STRING: ${{ secrets.SECUREERP_SQL_CONNECTION_STRING }}
+        run: dotnet test tests/SecureERP.Tests/SecureERP.Tests.csproj --configuration Release --no-build --filter "FullyQualifiedName~Integration" --logger "trx;LogFileName=integration.trx"
+
+      - name: Upload integration evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-trx
+          path: "**/integration.trx"
+
+  integration-sql-not-configured:
+    if: ${{ secrets.SECUREERP_SQL_CONNECTION_STRING == '' }}
+    runs-on: windows-latest
+    steps:
+      - name: SQL integration gate not configured
+        run: echo "SECUREERP_SQL_CONNECTION_STRING no esta configurado. El job de integracion SQL queda omitido."

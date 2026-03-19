@@ -32,3 +32,21 @@ Solution base enterprise para SecureERP sobre .NET 8 + SQL Server (ADO.NET + Sto
 
 Estructura inicial creada y lista para iteración incremental por fases.
 
+## Configuracion Segura (obligatoria)
+
+- No se permiten credenciales reales en archivos versionados.
+- Para API local, usar:
+  - `ConnectionStrings__SecureERP` (variable de entorno), o
+  - `dotnet user-secrets` en `src/SecureERP.Api`.
+- Para tests de integracion:
+  - `SECUREERP_SQL_CONNECTION_STRING` (variable de entorno), o
+  - `database.config.json` local (ignorado por git).
+
+Referencia oficial:
+- `docs/security/secrets-policy.md`
+
+## Certificacion de Main
+
+- Runbook oficial: `ops/runbooks/RUNBOOK_CERTIFICACION_MAIN_P1.md`
+- Plantilla de reporte: `ops/reports/CERTIFICACION_MAIN_TEMPLATE.md`
+

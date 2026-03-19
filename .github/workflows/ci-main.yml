@@ -1,0 +1,36 @@
+name: ci-main
+
+on:
+  pull_request:
+    branches: [ "main" ]
+  push:
+    branches: [ "main" ]
+
+jobs:
+  baseline-ci:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK (global.json)
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Secret scan (P0)
+        shell: pwsh
+        run: ./ops/security/scan-secrets.ps1
+
+      - name: Restore
+        run: dotnet restore SecureERP.sln
+
+      - name: Build
+        run: dotnet build SecureERP.sln --configuration Release --no-restore
+
+      - name: Tests no integracion (PR mandatory)
+        run: dotnet test tests/SecureERP.Tests/SecureERP.Tests.csproj --configuration Release --no-build --filter "FullyQualifiedName!~Integration"
+
+      - name: Guardrails arquitectura y seguridad (PR mandatory)
+        run: dotnet test tests/SecureERP.Tests/SecureERP.Tests.csproj --configuration Release --no-build --filter "FullyQualifiedName~SecureERP.Tests.Architecture|FullyQualifiedName~SecureERP.Tests.Security"

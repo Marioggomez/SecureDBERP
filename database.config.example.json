@@ -1,5 +1,4 @@
 {
   "provider": "sqlserver",
-  "connectionString": "Server=192.168.1.8,1205;Database=SecureERP;User Id=sa;Password=$im2403*;TrustServerCertificate=True"
+  "connectionString": "Server=localhost;Database=SecureERP;Integrated Security=True;TrustServerCertificate=True"
 }
-

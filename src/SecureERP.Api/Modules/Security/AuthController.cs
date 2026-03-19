@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using SecureERP.Application.Modules.Security.Abstractions;
 using SecureERP.Application.Modules.Security.DTOs;
+using SecureERP.Application.Modules.Security;
 using SecureERP.Domain.Modules.Security;
 
 namespace SecureERP.Api.Modules.Security;
@@ -107,6 +108,7 @@ public sealed class AuthController : ControllerBase
     }
 
     [HttpPost("validate-session")]
+    [RequirePermission(Permissions.AuthSessionValidate)]
     [ProducesResponseType(typeof(ValidateSessionResponseContract), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidateSessionResponseContract), StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<ValidateSessionResponseContract>> ValidateSession(

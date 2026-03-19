@@ -39,6 +39,7 @@ Describa modulo, endpoints y objetos DB impactados.
 - [ ] Sin SQL inline inseguro.
 - [ ] SP reutilizado o justificado.
 - [ ] Script SQL idempotente (si aplica).
+- [ ] Sin secretos o credenciales reales en archivos versionados.
 
 ### Tests
 - [ ] Pruebas de permiso (allow/deny).
