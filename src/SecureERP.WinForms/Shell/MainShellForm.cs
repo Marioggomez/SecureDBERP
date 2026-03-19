@@ -61,11 +61,12 @@ public sealed class MainShellForm : RibbonForm
         RibbonPageGroup modulesGroup = new("Módulos");
         RibbonPageGroup appearanceGroup = new("Apariencia");
 
-        BarButtonItem homeButton = CreateOpenModuleButton("HOME.DASHBOARD", "Inicio");
-        BarButtonItem searchButton = CreateOpenModuleButton("SEARCH.CATALOG", "Búsqueda Global");
-        BarButtonItem appearanceButton = CreateOpenModuleButton("SYSTEM.APPEARANCE", "Skins");
+        BarButtonItem homeButton = CreateOpenModuleButton(ribbon, "HOME.DASHBOARD", "Inicio");
+        BarButtonItem searchButton = CreateOpenModuleButton(ribbon, "SEARCH.CATALOG", "Búsqueda Global");
+        BarButtonItem appearanceButton = CreateOpenModuleButton(ribbon, "SYSTEM.APPEARANCE", "Skins");
 
         SkinRibbonGalleryBarItem skinGallery = new();
+        ribbon.Items.Add(skinGallery);
 
         modulesGroup.ItemLinks.Add(homeButton);
         modulesGroup.ItemLinks.Add(searchButton);
@@ -118,10 +119,14 @@ public sealed class MainShellForm : RibbonForm
         return navigation;
     }
 
-    private BarButtonItem CreateOpenModuleButton(string key, string caption)
+    private BarButtonItem CreateOpenModuleButton(RibbonControl ribbon, string key, string caption)
     {
-        BarButtonItem item = new(_ribbon.Manager, caption);
+        BarButtonItem item = new()
+        {
+            Caption = caption
+        };
         item.ItemClick += (_, _) => OpenModule(key);
+        ribbon.Items.Add(item);
         return item;
     }
 
