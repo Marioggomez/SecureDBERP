@@ -1,4 +1,5 @@
-﻿using DevExpress.XtraEditors;
+using DevExpress.XtraEditors;
+using SecureERP.WinForms.Services.Navigation;
 
 namespace SecureERP.WinForms.Services.Navigation;
 
@@ -7,5 +8,5 @@ public sealed record NavigationItemDefinition(
     string Caption,
     string Group,
     Func<XtraForm> CreateView,
-    bool OpenOnStartup = false);
+    bool OpenOnStartup = false) : IWorkspaceModule;
 

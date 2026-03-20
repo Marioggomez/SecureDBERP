@@ -1,4 +1,4 @@
-﻿namespace SecureERP.WinForms.Services.Navigation;
+namespace SecureERP.WinForms.Services.Navigation;
 
 public interface INavigationModule
 {

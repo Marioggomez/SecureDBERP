@@ -24,6 +24,10 @@ public static class DependencyInjection
         services.AddScoped<IValidateSessionHandler, ValidateSessionHandler>();
         services.AddScoped<IRequestMfaChallengeHandler, RequestMfaChallengeHandler>();
         services.AddScoped<IVerifyMfaChallengeHandler, VerifyMfaChallengeHandler>();
+        services.AddScoped<IListSecurityUsersHandler, ListSecurityUsersHandler>();
+        services.AddScoped<IGetSecurityUserByIdHandler, GetSecurityUserByIdHandler>();
+        services.AddScoped<IListSecurityEventsHandler, ListSecurityEventsHandler>();
+        services.AddScoped<IRevokeSessionHandler, RevokeSessionHandler>();
         services.AddScoped<IAuthorizationEvaluator, AuthorizationEvaluator>();
         services.AddScoped<IOperationalSecurityService, OperationalSecurityService>();
 

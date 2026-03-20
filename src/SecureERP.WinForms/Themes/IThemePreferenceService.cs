@@ -1,4 +1,4 @@
-﻿namespace SecureERP.WinForms.Themes;
+namespace SecureERP.WinForms.Themes;
 
 public interface IThemePreferenceService
 {

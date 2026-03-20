@@ -2,6 +2,7 @@
 using SecureERP.WinForms.Modules.Search;
 using SecureERP.WinForms.Modules.System;
 using SecureERP.WinForms.Services.Search;
+using SecureERP.WinForms.Services.Workspace;
 using SecureERP.WinForms.Themes;
 
 namespace SecureERP.WinForms.Services.Navigation;
@@ -23,20 +24,20 @@ public sealed class NavigationModuleCatalog : INavigationModule
                 Key: "HOME.DASHBOARD",
                 Caption: "Inicio",
                 Group: "General",
-                CreateView: () => new HomeDashboardForm(),
+                CreateView: () => new WorkspaceHostForm(new HomeDashboardPage()),
                 OpenOnStartup: true),
 
             new NavigationItemDefinition(
                 Key: "SYSTEM.APPEARANCE",
                 Caption: "Apariencia",
                 Group: "General",
-                CreateView: () => new AppearanceSettingsForm(_themePreferenceService)),
+                CreateView: () => new WorkspaceHostForm(new AppearanceWorkspacePage(_themePreferenceService))),
 
             new NavigationItemDefinition(
                 Key: "SEARCH.CATALOG",
                 Caption: "Búsqueda Global",
                 Group: "Búsquedas",
-                CreateView: () => new CatalogSearchForm(new MockCatalogSearchProvider()))
+                CreateView: () => new WorkspaceHostForm(new CatalogSearchPage(new MockCatalogSearchProvider())))
         ];
     }
 }

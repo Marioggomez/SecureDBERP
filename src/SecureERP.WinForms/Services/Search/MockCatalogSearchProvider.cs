@@ -23,7 +23,8 @@ public sealed class MockCatalogSearchProvider : ISearchDataProvider<CatalogSearc
 
     public async Task<SearchPageResult<CatalogSearchItem>> SearchAsync(SearchQuery query, CancellationToken cancellationToken = default)
     {
-        await Task.Delay(250, cancellationToken);
+        // Sin delay artificial: el loading debe reflejar tiempo real de carga.
+        await Task.Yield();
 
         IEnumerable<CatalogSearchItem> q = _dataset;
 
@@ -45,8 +46,26 @@ public sealed class MockCatalogSearchProvider : ISearchDataProvider<CatalogSearc
         int page = Math.Max(1, query.Page);
         int pageSize = Math.Max(5, query.PageSize);
 
-        IReadOnlyList<CatalogSearchItem> pageItems = q
-            .OrderBy(item => item.Code, StringComparer.OrdinalIgnoreCase)
+        IOrderedEnumerable<CatalogSearchItem> ordered = (query.SortBy?.ToLowerInvariant()) switch
+        {
+            "name" => query.SortDescending
+                ? q.OrderByDescending(item => item.Name, StringComparer.OrdinalIgnoreCase)
+                : q.OrderBy(item => item.Name, StringComparer.OrdinalIgnoreCase),
+            "updatedat" => query.SortDescending
+                ? q.OrderByDescending(item => item.UpdatedAt)
+                : q.OrderBy(item => item.UpdatedAt),
+            "category" => query.SortDescending
+                ? q.OrderByDescending(item => item.Category, StringComparer.OrdinalIgnoreCase)
+                : q.OrderBy(item => item.Category, StringComparer.OrdinalIgnoreCase),
+            "state" => query.SortDescending
+                ? q.OrderByDescending(item => item.State, StringComparer.OrdinalIgnoreCase)
+                : q.OrderBy(item => item.State, StringComparer.OrdinalIgnoreCase),
+            _ => query.SortDescending
+                ? q.OrderByDescending(item => item.Code, StringComparer.OrdinalIgnoreCase)
+                : q.OrderBy(item => item.Code, StringComparer.OrdinalIgnoreCase)
+        };
+
+        IReadOnlyList<CatalogSearchItem> pageItems = ordered
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToList();

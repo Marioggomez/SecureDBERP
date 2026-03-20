@@ -1,71 +1,57 @@
 using DevExpress.XtraEditors;
-using DevExpress.XtraWaitForm;
+using SecureERP.WinForms.Common;
 
 namespace SecureERP.WinForms.Splash;
 
-public sealed class ErpSplashForm : XtraForm
+public partial class ErpSplashForm : XtraForm
 {
-    private readonly LabelControl _statusLabel;
+    private readonly System.Windows.Forms.Timer _animationTimer;
+    private string _baseStatus = "Iniciando...";
+    private int _animationTick;
 
     public ErpSplashForm()
     {
-        FormBorderStyle = FormBorderStyle.None;
-        StartPosition = FormStartPosition.CenterScreen;
-        ClientSize = new Size(520, 280);
-        MaximizeBox = false;
-        MinimizeBox = false;
-        ShowInTaskbar = false;
-        TopMost = true;
+        InitializeComponent();
 
-        PanelControl root = new()
+        //_titleLabel.Text = AppBranding.SplashTitle;
+        //_subtitleLabel.Text = AppBranding.ApplicationSubtitle;
+        _animationTimer = new System.Windows.Forms.Timer
         {
-            Dock = DockStyle.Fill,
-            BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.NoBorder,
-            Padding = new Padding(24)
+            Interval = 300
         };
-
-        LabelControl title = new()
-        {
-            Dock = DockStyle.Top,
-            Height = 52,
-            Text = "SecureERP",
-            Appearance = { Font = new Font("Segoe UI", 28, FontStyle.Bold) }
-        };
-
-        LabelControl subtitle = new()
-        {
-            Dock = DockStyle.Top,
-            Height = 36,
-            Text = "Cliente Desktop Enterprise",
-            Appearance = { Font = new Font("Segoe UI", 11, FontStyle.Regular) }
-        };
-
-        ProgressPanel progress = new()
-        {
-            Dock = DockStyle.Bottom,
-            Height = 80,
-            Caption = "Inicializando",
-            Description = "Preparando shell principal y módulos..."
-        };
-
-        _statusLabel = new LabelControl
-        {
-            Dock = DockStyle.Bottom,
-            Height = 24,
-            Text = "Iniciando..."
-        };
-
-        root.Controls.Add(progress);
-        root.Controls.Add(_statusLabel);
-        root.Controls.Add(subtitle);
-        root.Controls.Add(title);
-
-        Controls.Add(root);
+        _animationTimer.Tick += (_, _) => AnimateStatus();
+        _animationTimer.Start();
+        FormClosed += (_, _) => DisposeAnimation();
     }
 
     public void UpdateStatus(string message)
     {
-        _statusLabel.Text = message;
+        _baseStatus = message;
+        _animationTick = 0;
+        ApplyAnimatedStatus();
+    }
+
+    private void AnimateStatus()
+    {
+        _animationTick++;
+        ApplyAnimatedStatus();
+    }
+
+    private void ApplyAnimatedStatus()
+    {
+        int dots = (_animationTick % 3) + 1;
+        string suffix = new('.', dots);
+        string status = $"{_baseStatus}{suffix}";
+
+        _statusLabel.Text = status;
         _statusLabel.Refresh();
+        //_progressPanel.Description = status;
+        //_progressPanel.Refresh();
+    }
+
+    private void DisposeAnimation()
+    {
+        _animationTimer.Stop();
+        _animationTimer.Dispose();
     }
 }
